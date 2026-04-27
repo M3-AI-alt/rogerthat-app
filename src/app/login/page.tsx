@@ -1,30 +1,13 @@
 "use client";
 
 import { AppShell } from "@/components/layout/AppShell";
+import { getCurrentUserProfile, getDashboardRoute } from "@/lib/profile";
 import { ROUTES } from "@/lib/routes";
 import { getFriendlyAuthError } from "@/lib/supabase/auth-errors";
 import { supabase, supabaseConfig } from "@/lib/supabase/client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type FormEvent, type ReactElement, useState } from "react";
-
-type LoginRole = "ceo" | "director" | "teacher" | "parent";
-
-const dashboardByRole: Record<LoginRole, string> = {
-  ceo: ROUTES.ceoDashboard,
-  director: ROUTES.directorDashboard,
-  teacher: ROUTES.teacherDashboard,
-  parent: ROUTES.parentDashboard,
-};
-
-function isLoginRole(role: unknown): role is LoginRole {
-  return (
-    role === "ceo" ||
-    role === "director" ||
-    role === "teacher" ||
-    role === "parent"
-  );
-}
 
 function getSupabaseConfigError(): string {
   if (!supabaseConfig.hasUrl || !supabaseConfig.hasAnonKey) {
@@ -38,7 +21,6 @@ export default function LoginPage(): ReactElement {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [selectedRole, setSelectedRole] = useState<LoginRole | "">("");
   const [errorMessage, setErrorMessage] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -57,7 +39,7 @@ export default function LoginPage(): ReactElement {
 
     setIsLoading(true);
 
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const { error } = await supabase.auth.signInWithPassword({
       email: email.trim(),
       password,
     });
@@ -69,25 +51,39 @@ export default function LoginPage(): ReactElement {
       return;
     }
 
-    const userMetadata = data.user?.user_metadata ?? {};
-    const approvalStatus = userMetadata.approval_status;
-    const metadataRole = userMetadata.role;
+    try {
+      const profile = await getCurrentUserProfile();
 
-    if (approvalStatus === "pending") {
-      setStatusMessage(
-        "Your account request is still waiting for CEO approval."
-      );
-      return;
+      if (!profile) {
+        setErrorMessage(
+          "No profile was found for this account. Ask the CEO to create or approve your profile."
+        );
+        return;
+      }
+
+      if (profile.approval_status === "PENDING") {
+        setStatusMessage(
+          "Your account request is waiting for CEO approval."
+        );
+        return;
+      }
+
+      if (profile.approval_status === "REJECTED") {
+        setErrorMessage("Your account request was rejected.");
+        return;
+      }
+
+      const dashboardRoute = getDashboardRoute(profile);
+
+      if (!dashboardRoute) {
+        setErrorMessage("Your profile role is missing or incomplete.");
+        return;
+      }
+
+      router.push(dashboardRoute);
+    } catch {
+      setErrorMessage("Could not load your profile. Please try again.");
     }
-
-    const role = isLoginRole(metadataRole) ? metadataRole : selectedRole;
-
-    if (role) {
-      router.push(dashboardByRole[role]);
-      return;
-    }
-
-    router.push(ROUTES.roles);
   }
 
   return (
@@ -179,23 +175,6 @@ export default function LoginPage(): ReactElement {
               value={password}
             />
           </label>
-          <label className="grid gap-2 text-sm font-medium text-slate-700">
-            Temporary role redirect
-            <select
-              className="min-h-12 rounded-lg border border-slate-300 bg-white px-4 text-base text-slate-950"
-              onChange={(event) =>
-                setSelectedRole(event.target.value as LoginRole | "")
-              }
-              value={selectedRole}
-            >
-              <option value="">Use account role, or choose later</option>
-              <option value="parent">Parent</option>
-              <option value="teacher">Teacher</option>
-              <option value="director">Director</option>
-              <option value="ceo">CEO / Owner</option>
-            </select>
-          </label>
-
           {errorMessage ? (
             <p className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm leading-6 text-red-700">
               {errorMessage}

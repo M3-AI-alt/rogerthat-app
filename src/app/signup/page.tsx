@@ -62,6 +62,29 @@ export default function SignupPage(): ReactElement {
       return;
     }
 
+    if (data.user && data.session) {
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .upsert(
+          {
+            id: data.user.id,
+            full_name: parentName,
+            email: email.trim(),
+            phone,
+            role: "PARENT",
+            approval_status: "PENDING",
+          },
+          { ignoreDuplicates: true, onConflict: "id" }
+        );
+
+      if (profileError) {
+        setErrorMessage(
+          "Your account was created, but the profile could not be created. Make sure the profiles SQL has been run in Supabase."
+        );
+        return;
+      }
+    }
+
     if (data.user && !data.session) {
       setSuccessMessage(
         "Your account request has been created and is pending CEO approval. Check your email to confirm your account before login."
