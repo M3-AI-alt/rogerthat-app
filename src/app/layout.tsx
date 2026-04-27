@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "RogerThat",
+  title: "RogerThat by Ben Oxford Hub",
   description: "Daily Parent Reporting System for Ben Oxford Hub",
 };
 
