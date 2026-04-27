@@ -2,7 +2,7 @@
 
 import { AppShell } from "@/components/layout/AppShell";
 import { ROUTES } from "@/lib/routes";
-import { supabase } from "@/lib/supabase/client";
+import { supabase, supabaseConfig } from "@/lib/supabase/client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type FormEvent, type ReactElement, useState } from "react";
@@ -25,6 +25,14 @@ function isLoginRole(role: unknown): role is LoginRole {
   );
 }
 
+function getSupabaseConfigError(): string {
+  if (!supabaseConfig.hasUrl || !supabaseConfig.hasAnonKey) {
+    return "Supabase is not configured. Check NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local, then restart npm run dev.";
+  }
+
+  return "";
+}
+
 export default function LoginPage(): ReactElement {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -38,19 +46,40 @@ export default function LoginPage(): ReactElement {
     event.preventDefault();
     setErrorMessage("");
     setStatusMessage("");
+
+    const configError = getSupabaseConfigError();
+
+    if (configError) {
+      console.error("[Supabase login] Missing configuration", {
+        hasAnonKey: supabaseConfig.hasAnonKey,
+        hasUrl: supabaseConfig.hasUrl,
+      });
+      setErrorMessage(configError);
+      return;
+    }
+
     setIsLoading(true);
 
     const { data, error } = await supabase.auth.signInWithPassword({
-      email,
+      email: email.trim(),
       password,
     });
 
     setIsLoading(false);
 
     if (error) {
+      console.error("[Supabase login] signInWithPassword failed", {
+        message: error.message,
+        status: error.status,
+      });
       setErrorMessage(error.message);
       return;
     }
+
+    console.info("[Supabase login] signInWithPassword succeeded", {
+      hasSession: Boolean(data.session),
+      userId: data.user?.id,
+    });
 
     const userMetadata = data.user?.user_metadata ?? {};
     const approvalStatus = userMetadata.approval_status;
@@ -83,6 +112,12 @@ export default function LoginPage(): ReactElement {
         <p className="mt-3 text-base leading-7 text-slate-600">
           Email and password login is active. Phone and Google login will be
           added later.
+        </p>
+        <p className="mt-3 rounded-lg border border-slate-200 bg-white p-3 text-xs leading-5 text-slate-500">
+          Supabase config:{" "}
+          {supabaseConfig.hasUrl && supabaseConfig.hasAnonKey
+            ? `connected to ${supabaseConfig.urlHost}`
+            : "missing local environment variables"}
         </p>
 
         <div className="mt-8 grid gap-5 rounded-lg border border-slate-300 bg-white p-5 shadow-sm">

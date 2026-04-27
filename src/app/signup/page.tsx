@@ -2,9 +2,17 @@
 
 import { AppShell } from "@/components/layout/AppShell";
 import { ROUTES } from "@/lib/routes";
-import { supabase } from "@/lib/supabase/client";
+import { supabase, supabaseConfig } from "@/lib/supabase/client";
 import Link from "next/link";
 import { type FormEvent, type ReactElement, useState } from "react";
+
+function getSupabaseConfigError(): string {
+  if (!supabaseConfig.hasUrl || !supabaseConfig.hasAnonKey) {
+    return "Supabase is not configured. Check NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local, then restart npm run dev.";
+  }
+
+  return "";
+}
 
 export default function SignupPage(): ReactElement {
   const [parentName, setParentName] = useState("");
@@ -21,10 +29,22 @@ export default function SignupPage(): ReactElement {
     event.preventDefault();
     setErrorMessage("");
     setSuccessMessage("");
+
+    const configError = getSupabaseConfigError();
+
+    if (configError) {
+      console.error("[Supabase signup] Missing configuration", {
+        hasAnonKey: supabaseConfig.hasAnonKey,
+        hasUrl: supabaseConfig.hasUrl,
+      });
+      setErrorMessage(configError);
+      return;
+    }
+
     setIsLoading(true);
 
-    const { error } = await supabase.auth.signUp({
-      email,
+    const { data, error } = await supabase.auth.signUp({
+      email: email.trim(),
       password,
       options: {
         data: {
@@ -41,13 +61,29 @@ export default function SignupPage(): ReactElement {
     setIsLoading(false);
 
     if (error) {
+      console.error("[Supabase signup] signUp failed", {
+        message: error.message,
+        status: error.status,
+      });
       setErrorMessage(error.message);
       return;
     }
 
-    setSuccessMessage(
-      "Your account request has been created and is pending CEO approval."
-    );
+    console.info("[Supabase signup] signUp succeeded", {
+      hasSession: Boolean(data.session),
+      userId: data.user?.id,
+    });
+
+    if (data.user && !data.session) {
+      setSuccessMessage(
+        "Your account request has been created and is pending CEO approval. Check your email to confirm your account before login."
+      );
+    } else {
+      setSuccessMessage(
+        "Your account request has been created and is pending CEO approval."
+      );
+    }
+
     setParentName("");
     setPhone("");
     setEmail("");
@@ -66,6 +102,12 @@ export default function SignupPage(): ReactElement {
         <p className="mt-3 text-base leading-7 text-slate-600">
           Parent signup creates an access request. CEO approval will be added in
           a later step.
+        </p>
+        <p className="mt-3 rounded-lg border border-slate-200 bg-white p-3 text-xs leading-5 text-slate-500">
+          Supabase config:{" "}
+          {supabaseConfig.hasUrl && supabaseConfig.hasAnonKey
+            ? `connected to ${supabaseConfig.urlHost}`
+            : "missing local environment variables"}
         </p>
 
         <div className="mt-8 grid gap-3 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
