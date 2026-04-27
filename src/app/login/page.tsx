@@ -2,6 +2,7 @@
 
 import { AppShell } from "@/components/layout/AppShell";
 import { ROUTES } from "@/lib/routes";
+import { getFriendlyAuthError } from "@/lib/supabase/auth-errors";
 import { supabase, supabaseConfig } from "@/lib/supabase/client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -72,7 +73,7 @@ export default function LoginPage(): ReactElement {
         message: error.message,
         status: error.status,
       });
-      setErrorMessage(error.message);
+      setErrorMessage(getFriendlyAuthError(error.message));
       return;
     }
 
@@ -112,6 +113,10 @@ export default function LoginPage(): ReactElement {
         <p className="mt-3 text-base leading-7 text-slate-600">
           Email and password login is active. Phone and Google login will be
           added later.
+        </p>
+        <p className="mt-3 text-sm leading-6 text-slate-600">
+          If you created a user manually inside Supabase, make sure that user
+          has a password and a confirmed email address before logging in here.
         </p>
         <p className="mt-3 rounded-lg border border-slate-200 bg-white p-3 text-xs leading-5 text-slate-500">
           Supabase config:{" "}

@@ -2,6 +2,7 @@
 
 import { AppShell } from "@/components/layout/AppShell";
 import { ROUTES } from "@/lib/routes";
+import { getFriendlyAuthError } from "@/lib/supabase/auth-errors";
 import { supabase, supabaseConfig } from "@/lib/supabase/client";
 import Link from "next/link";
 import { type FormEvent, type ReactElement, useState } from "react";
@@ -65,7 +66,7 @@ export default function SignupPage(): ReactElement {
         message: error.message,
         status: error.status,
       });
-      setErrorMessage(error.message);
+      setErrorMessage(getFriendlyAuthError(error.message));
       return;
     }
 
@@ -102,6 +103,10 @@ export default function SignupPage(): ReactElement {
         <p className="mt-3 text-base leading-7 text-slate-600">
           Parent signup creates an access request. CEO approval will be added in
           a later step.
+        </p>
+        <p className="mt-3 text-sm leading-6 text-slate-600">
+          Use a real email inbox, because Supabase will send a confirmation
+          email before login is allowed.
         </p>
         <p className="mt-3 rounded-lg border border-slate-200 bg-white p-3 text-xs leading-5 text-slate-500">
           Supabase config:{" "}
