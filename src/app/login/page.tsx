@@ -51,10 +51,6 @@ export default function LoginPage(): ReactElement {
     const configError = getSupabaseConfigError();
 
     if (configError) {
-      console.error("[Supabase login] Missing configuration", {
-        hasAnonKey: supabaseConfig.hasAnonKey,
-        hasUrl: supabaseConfig.hasUrl,
-      });
       setErrorMessage(configError);
       return;
     }
@@ -69,18 +65,9 @@ export default function LoginPage(): ReactElement {
     setIsLoading(false);
 
     if (error) {
-      console.error("[Supabase login] signInWithPassword failed", {
-        message: error.message,
-        status: error.status,
-      });
-      setErrorMessage(getFriendlyAuthError(error.message));
+      setErrorMessage(getFriendlyAuthError(error));
       return;
     }
-
-    console.info("[Supabase login] signInWithPassword succeeded", {
-      hasSession: Boolean(data.session),
-      userId: data.user?.id,
-    });
 
     const userMetadata = data.user?.user_metadata ?? {};
     const approvalStatus = userMetadata.approval_status;

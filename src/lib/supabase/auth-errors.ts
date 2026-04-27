@@ -1,8 +1,29 @@
-export function getFriendlyAuthError(message: string): string {
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  if (typeof error === "string") {
+    return error;
+  }
+
+  if (error && typeof error === "object" && "message" in error) {
+    const message = (error as { message?: unknown }).message;
+
+    if (typeof message === "string") {
+      return message;
+    }
+  }
+
+  return "";
+}
+
+export function getFriendlyAuthError(error: unknown): string {
+  const message = getErrorMessage(error);
   const normalizedMessage = message.toLowerCase();
 
   if (normalizedMessage.includes("invalid login credentials")) {
-    return "Invalid login credentials. Check the email and password. If you created this user manually in Supabase, make sure the user has a password and the email is confirmed before login.";
+    return "Email or password is incorrect. If you just created an account, check if email confirmation is required.";
   }
 
   if (
@@ -17,6 +38,10 @@ export function getFriendlyAuthError(message: string): string {
     normalizedMessage.includes("email address")
   ) {
     return "Use a real email address that can receive confirmation email. Test domains like example.com can be rejected by Supabase.";
+  }
+
+  if (!message) {
+    return "Something went wrong. Please try again.";
   }
 
   return message;

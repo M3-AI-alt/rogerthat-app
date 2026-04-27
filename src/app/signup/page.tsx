@@ -34,10 +34,6 @@ export default function SignupPage(): ReactElement {
     const configError = getSupabaseConfigError();
 
     if (configError) {
-      console.error("[Supabase signup] Missing configuration", {
-        hasAnonKey: supabaseConfig.hasAnonKey,
-        hasUrl: supabaseConfig.hasUrl,
-      });
       setErrorMessage(configError);
       return;
     }
@@ -62,18 +58,9 @@ export default function SignupPage(): ReactElement {
     setIsLoading(false);
 
     if (error) {
-      console.error("[Supabase signup] signUp failed", {
-        message: error.message,
-        status: error.status,
-      });
-      setErrorMessage(getFriendlyAuthError(error.message));
+      setErrorMessage(getFriendlyAuthError(error));
       return;
     }
-
-    console.info("[Supabase signup] signUp succeeded", {
-      hasSession: Boolean(data.session),
-      userId: data.user?.id,
-    });
 
     if (data.user && !data.session) {
       setSuccessMessage(
