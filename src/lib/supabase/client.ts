@@ -1,29 +1,35 @@
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
-const fallbackSupabaseUrl = "https://example.supabase.co";
-const fallbackSupabaseAnonKey = "missing-supabase-anon-key";
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() ?? "";
+const supabaseAnonKey =
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim() ?? "";
+const fallbackSupabaseUrl = "https://placeholder.supabase.co";
+const fallbackSupabaseAnonKey =
+  "sb_publishable_placeholder_for_build_only_000000000000";
 
-function getUrlHost(url: string): string {
+function getParsedUrl(url: string): URL | null {
   if (!url) {
-    return "";
+    return null;
   }
 
   try {
-    return new URL(url).host;
+    return new URL(url);
   } catch {
-    return "";
+    return null;
   }
 }
 
+const parsedSupabaseUrl = getParsedUrl(supabaseUrl);
+const hasValidSupabaseUrl = Boolean(parsedSupabaseUrl);
+const hasSupabaseAnonKey = supabaseAnonKey.length > 0;
+
 export const supabaseConfig = {
-  hasAnonKey: supabaseAnonKey.length > 0,
-  hasUrl: supabaseUrl.length > 0,
-  urlHost: getUrlHost(supabaseUrl),
+  hasAnonKey: hasSupabaseAnonKey,
+  hasUrl: hasValidSupabaseUrl,
+  urlHost: parsedSupabaseUrl?.host ?? "",
 };
 
 export const supabase = createClient(
-  supabaseUrl || fallbackSupabaseUrl,
-  supabaseAnonKey || fallbackSupabaseAnonKey
+  hasValidSupabaseUrl ? supabaseUrl : fallbackSupabaseUrl,
+  hasSupabaseAnonKey ? supabaseAnonKey : fallbackSupabaseAnonKey
 );
