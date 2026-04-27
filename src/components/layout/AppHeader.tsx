@@ -1,3 +1,4 @@
+import { LogoutButton } from "@/components/auth/LogoutButton";
 import Image from "next/image";
 import Link from "next/link";
 import type { ReactElement } from "react";
@@ -23,6 +24,7 @@ export function AppHeader(): ReactElement {
             </span>
           </span>
         </Link>
+        <LogoutButton />
       </div>
     </header>
   );
