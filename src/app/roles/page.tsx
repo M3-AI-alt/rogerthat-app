@@ -6,12 +6,12 @@ const roleDetails = [
   {
     label: "CEO / Owner",
     description:
-      "The single owner account with full control across RogerThat.",
+      "The single owner account. The CEO creates classes, approves parents, assigns teachers, assigns parents to classes, and supervises every class group and private chat.",
   },
   {
     label: "Director",
     description:
-      "Supervises reports and chats. There can be many Directors.",
+      "Supervises reports and chats but cannot take or export the full parent database.",
   },
   {
     label: "Director with Admin access",
@@ -21,12 +21,22 @@ const roleDetails = [
   {
     label: "Teacher",
     description:
-      "Creates reports for parents and participates in supervised communication.",
+      "Reports to parents and can only see parents inside assigned classes.",
   },
   {
     label: "Parent",
     description:
-      "Uses the mobile-only experience to read reports and supervised chats.",
+      "Uses the mobile-only experience to read reports and supervised chats for assigned classes only.",
+  },
+  {
+    label: "Class group chat",
+    description:
+      "Public chat for the whole class parents, teacher, director, and CEO. The CEO must be present.",
+  },
+  {
+    label: "Private teacher-parent chat",
+    description:
+      "Private supervised chat with one teacher, one parent, director, and CEO. The CEO must be present.",
   },
 ] as const;
 
@@ -41,7 +51,8 @@ export default function RolesPage(): ReactElement {
           RogerThat roles
         </h1>
         <p className="mt-3 text-base leading-7 text-slate-600">
-          Simple explanation of future account roles and permissions.
+          CEO-controlled planning for classes, parent approvals, assignments,
+          and supervised communication.
         </p>
       </section>
 

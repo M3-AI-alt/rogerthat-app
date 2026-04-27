@@ -12,16 +12,25 @@ export default function SignupPage(): ReactElement {
         </p>
         <h1 className="mt-3 text-3xl font-semibold text-slate-950">Sign up</h1>
         <p className="mt-3 text-base leading-7 text-slate-600">
-          Request access for a Director, Teacher, or Parent account.
+          Parent access request for your child&apos;s class reports and
+          supervised chats.
         </p>
 
         <div className="mt-8 grid gap-4 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
           <label className="grid gap-2 text-sm font-medium text-slate-700">
-            Full name
+            Parent full name
             <input
               className="min-h-12 rounded-lg border border-slate-300 px-4 text-base text-slate-950"
-              placeholder="Your full name"
+              placeholder="Parent full name"
               type="text"
+            />
+          </label>
+          <label className="grid gap-2 text-sm font-medium text-slate-700">
+            Phone number
+            <input
+              className="min-h-12 rounded-lg border border-slate-300 px-4 text-base text-slate-950"
+              placeholder="+84..."
+              type="tel"
             />
           </label>
           <label className="grid gap-2 text-sm font-medium text-slate-700">
@@ -33,37 +42,40 @@ export default function SignupPage(): ReactElement {
             />
           </label>
           <label className="grid gap-2 text-sm font-medium text-slate-700">
-            Phone number optional
+            Child name
             <input
               className="min-h-12 rounded-lg border border-slate-300 px-4 text-base text-slate-950"
-              placeholder="+84..."
-              type="tel"
+              placeholder="Child name"
+              type="text"
             />
           </label>
           <label className="grid gap-2 text-sm font-medium text-slate-700">
-            Password optional
+            Class ID / Class Code
             <input
               className="min-h-12 rounded-lg border border-slate-300 px-4 text-base text-slate-950"
-              placeholder="Password"
-              type="password"
+              placeholder="Class code from CEO"
+              type="text"
             />
-          </label>
-          <label className="grid gap-2 text-sm font-medium text-slate-700">
-            Requested role
-            <select className="min-h-12 rounded-lg border border-slate-300 bg-white px-4 text-base text-slate-950">
-              <option>Director</option>
-              <option>Teacher</option>
-              <option>Parent</option>
-            </select>
           </label>
 
           <p className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
-            Accounts must be approved by CEO before access.
+            Your account will wait for CEO approval. The CEO will assign you to
+            the correct class.
           </p>
 
           <button className="min-h-14 rounded-lg bg-slate-950 px-5 py-4 text-base font-semibold text-white">
-            Request account
+            Send parent access request
           </button>
+        </div>
+
+        <div className="mt-4 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+          <p className="text-base font-semibold text-slate-950">
+            Your request has been sent.
+          </p>
+          <p className="mt-2 text-sm leading-6 text-slate-600">
+            Your account is pending CEO approval. After approval, you will be
+            assigned to your child&apos;s class.
+          </p>
         </div>
 
         <p className="mt-6 text-center text-sm text-slate-600">
