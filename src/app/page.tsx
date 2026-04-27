@@ -7,6 +7,7 @@ import {
   ROLE_SUMMARIES,
 } from "@/lib/constants";
 import { ROUTES } from "@/lib/routes";
+import Link from "next/link";
 import type { ReactElement } from "react";
 
 const roleCards = [
@@ -49,6 +50,26 @@ export default function Home(): ReactElement {
         <p className="mt-5 text-lg leading-8 text-slate-600">
           {APP_DESCRIPTION}
         </p>
+        <div className="mt-8 grid gap-3 sm:max-w-md">
+          <Link
+            className="min-h-14 rounded-lg bg-slate-950 px-5 py-4 text-center text-base font-semibold text-white"
+            href={ROUTES.login}
+          >
+            Login
+          </Link>
+          <Link
+            className="min-h-14 rounded-lg border border-slate-300 bg-white px-5 py-4 text-center text-base font-semibold text-slate-950"
+            href={ROUTES.signup}
+          >
+            Sign Up
+          </Link>
+          <Link
+            className="min-h-14 rounded-lg border border-slate-300 bg-white px-5 py-4 text-center text-base font-semibold text-slate-950"
+            href={ROUTES.roles}
+          >
+            View Roles
+          </Link>
+        </div>
       </section>
 
       <section className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

@@ -12,6 +12,7 @@ export const ROUTES = {
   settings: "/settings",
   login: "/login",
   signup: "/signup",
+  roles: "/roles",
 } as const;
 
 export type AppRoute = (typeof ROUTES)[keyof typeof ROUTES];
