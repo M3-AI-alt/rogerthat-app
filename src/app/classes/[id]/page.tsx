@@ -8,6 +8,7 @@ import {
   getReportsForClass,
   type ClassReport,
 } from "@/lib/reports";
+import { supabase } from "@/lib/supabase/client";
 import { useParams } from "next/navigation";
 import {
   type FormEvent,
@@ -43,6 +44,8 @@ export default function ClassReportsPage(): ReactElement {
   const [successMessage, setSuccessMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
+  const [newReportCount, setNewReportCount] = useState(0);
+  const [showNewReportHint, setShowNewReportHint] = useState(false);
 
   const canCreateReport = profile?.role === "TEACHER";
 
@@ -97,6 +100,36 @@ export default function ClassReportsPage(): ReactElement {
     return () => window.clearTimeout(timerId);
   }, [loadClassRoom]);
 
+  useEffect(() => {
+    const channel = supabase
+      .channel(`class_reports:${classId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          filter: `class_id=eq.${classId}`,
+          schema: "public",
+          table: "class_reports",
+        },
+        () => {
+          setNewReportCount((currentCount) => currentCount + 1);
+          setShowNewReportHint(true);
+          void getReportsForClass(classId).then(setReports).catch(() => {
+            setErrorMessage("A new report arrived, but it could not be loaded.");
+          });
+
+          window.setTimeout(() => {
+            setShowNewReportHint(false);
+          }, 2500);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [classId]);
+
   return (
     <AppShell>
       <section>
@@ -148,10 +181,23 @@ export default function ClassReportsPage(): ReactElement {
       ) : null}
 
       <section className="mt-8 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-        <p className="text-sm font-medium text-slate-500">Daily reports</p>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-sm font-medium text-slate-500">Daily reports</p>
+          <span className="inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800">
+            {newReportCount} new
+          </span>
+        </div>
         <h2 className="mt-1 text-xl font-semibold text-slate-950">
           Reports for this class
         </h2>
+        <p className="mt-2 text-sm text-slate-500">
+          Reports update live while this page is open.
+        </p>
+        {showNewReportHint ? (
+          <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm font-semibold text-amber-900">
+            New report received. Sound alert placeholder.
+          </p>
+        ) : null}
         <div className="mt-5 grid gap-3">
           {isLoading ? (
             <p className="text-sm text-slate-600">Loading reports...</p>

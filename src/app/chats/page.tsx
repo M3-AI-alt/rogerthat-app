@@ -2,8 +2,9 @@
 
 import { AppShell } from "@/components/layout/AppShell";
 import { getMyChats, type Chat } from "@/lib/chats";
+import { supabase } from "@/lib/supabase/client";
 import Link from "next/link";
-import { type ReactElement, useEffect, useState } from "react";
+import { type ReactElement, useEffect, useMemo, useState } from "react";
 
 function getChatLabel(chat: Chat): string {
   return chat.title?.trim() || "Supervised chat";
@@ -25,6 +26,19 @@ export default function ChatsPage(): ReactElement {
   const [chats, setChats] = useState<Chat[]>([]);
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [newMessageCounts, setNewMessageCounts] = useState<
+    Record<string, number>
+  >({});
+  const [showNewMessageHint, setShowNewMessageHint] = useState(false);
+
+  const totalNewMessages = useMemo(
+    () =>
+      Object.values(newMessageCounts).reduce(
+        (total, chatCount) => total + chatCount,
+        0
+      ),
+    [newMessageCounts]
+  );
 
   async function loadChats() {
     setErrorMessage("");
@@ -49,6 +63,44 @@ export default function ChatsPage(): ReactElement {
     return () => window.clearTimeout(timerId);
   }, []);
 
+  useEffect(() => {
+    if (chats.length === 0) {
+      return;
+    }
+
+    const channels = chats.map((chat) =>
+      supabase
+        .channel(`chat-list-messages:${chat.id}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            filter: `chat_id=eq.${chat.id}`,
+            schema: "public",
+            table: "messages",
+          },
+          () => {
+            setNewMessageCounts((currentCounts) => ({
+              ...currentCounts,
+              [chat.id]: (currentCounts[chat.id] ?? 0) + 1,
+            }));
+            setShowNewMessageHint(true);
+
+            window.setTimeout(() => {
+              setShowNewMessageHint(false);
+            }, 2500);
+          }
+        )
+        .subscribe()
+    );
+
+    return () => {
+      channels.forEach((channel) => {
+        void supabase.removeChannel(channel);
+      });
+    };
+  }, [chats]);
+
   return (
     <AppShell>
       <section>
@@ -66,6 +118,14 @@ export default function ChatsPage(): ReactElement {
 
       <section className="mt-8 grid gap-4">
         <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+            <p className="text-sm font-semibold text-slate-700">
+              Live chat updates
+            </p>
+            <span className="inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800">
+              {totalNewMessages} new messages
+            </span>
+          </div>
           <div className="grid gap-2 text-sm font-semibold text-slate-700 sm:grid-cols-3">
             <p className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-emerald-800">
               Supervised by CEO
@@ -77,6 +137,11 @@ export default function ChatsPage(): ReactElement {
               No hidden private chat
             </p>
           </div>
+          {showNewMessageHint ? (
+            <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm font-semibold text-amber-900">
+              New message received. Sound alert placeholder.
+            </p>
+          ) : null}
         </div>
 
         {errorMessage ? (
@@ -110,6 +175,11 @@ export default function ChatsPage(): ReactElement {
                 {chat.class_groups ? (
                   <p className="mt-2 inline-flex rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
                     {chat.class_groups.code} - {chat.class_groups.name}
+                  </p>
+                ) : null}
+                {(newMessageCounts[chat.id] ?? 0) > 0 ? (
+                  <p className="mt-3 inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800">
+                    {newMessageCounts[chat.id]} new
                   </p>
                 ) : null}
               </Link>
