@@ -51,6 +51,15 @@ function getSenderName(message: ChatMessage): string {
   return getProfileName(message.profiles);
 }
 
+function getReportSenderLabel(message: ChatMessage): string {
+  const role = getRoleLabel(message.profiles?.role);
+  const name = getSenderName(message);
+
+  return message.profiles?.role === "TEACHER"
+    ? `Teacher: ${name}`
+    : `${role}: ${name}`;
+}
+
 function getChatTitle(chat: Chat | null): string {
   if (chat?.chat_type === "CLASS_GROUP_CHAT" && chat.class_groups) {
     return `${chat.class_groups.code} Class Room`;
@@ -76,7 +85,7 @@ function getRoleLabel(role: string | null | undefined): string {
 }
 
 function isReportMessage(message: ChatMessage): boolean {
-  return message.content.startsWith("[REPORT]\n");
+  return message.message_type === "REPORT" || message.content.startsWith("[REPORT]\n");
 }
 
 function getMessageText(message: ChatMessage): string {
@@ -340,11 +349,7 @@ export default function ChatDetailPage(): ReactElement {
 
     try {
       const textContent = trimmedContent || selectedFile?.name || "Attachment";
-      const messageContent =
-        messageType === "REPORT"
-          ? `[REPORT]\n${textContent}`
-          : textContent;
-      const message = await sendMessage(chatId, messageContent);
+      const message = await sendMessage(chatId, textContent, messageType);
 
       if (selectedFile) {
         const attachment = await uploadMessageAttachment(selectedFile, message.id);
@@ -545,15 +550,28 @@ export default function ChatDetailPage(): ReactElement {
                       }`}
                     >
                       <div className="mb-1 flex flex-wrap items-center gap-2">
-                        <span className="font-semibold text-slate-800">
-                          {getSenderName(message)}
-                        </span>
-                        <span className="rounded-full bg-black/5 px-2 py-0.5 text-[10px] font-semibold uppercase text-slate-600">
-                          {getRoleLabel(message.profiles?.role)}
-                        </span>
+                        {isReport ? (
+                          <>
+                            <span className="font-semibold text-slate-800">
+                              {getReportSenderLabel(message)}
+                            </span>
+                            <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-semibold uppercase text-blue-800">
+                              Report
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="font-semibold text-slate-800">
+                              {getSenderName(message)}
+                            </span>
+                            <span className="rounded-full bg-black/5 px-2 py-0.5 text-[10px] font-semibold uppercase text-slate-600">
+                              {getRoleLabel(message.profiles?.role)}
+                            </span>
+                          </>
+                        )}
                         {isReport ? (
                           <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-semibold uppercase text-blue-800">
-                            Report
+                            {getRoleLabel(message.profiles?.role)}
                           </span>
                         ) : null}
                       </div>

@@ -42,6 +42,7 @@ export type ChatMessage = {
   chat_id: string | null;
   sender_id: string | null;
   content: string;
+  message_type: MessageType;
   created_at: string;
   profiles?: ChatMemberProfile | null;
 };
@@ -65,7 +66,7 @@ const chatSelect =
   "id, class_id, chat_type, title, created_by, parent_id, teacher_id, created_at, class_groups(id, name, code), chat_members(id, chat_id, profile_id, member_role, created_at, profiles(id, full_name, email, role))";
 
 const messageSelect =
-  "id, chat_id, sender_id, content, created_at, profiles(id, full_name, email, role)";
+  "id, chat_id, sender_id, content, message_type, created_at, profiles(id, full_name, email, role)";
 
 function normalizeProfile(profile: NestedProfileRow): ChatMemberProfile | null {
   return Array.isArray(profile) ? (profile[0] ?? null) : (profile ?? null);
@@ -259,7 +260,8 @@ export async function getChatMessages(chatId: string): Promise<ChatMessage[]> {
 
 export async function sendMessage(
   chatId: string,
-  content: string
+  content: string,
+  messageType: MessageType = "CHAT"
 ): Promise<ChatMessage> {
   const senderId = await getCurrentUserId();
   const { data, error } = await supabase
@@ -267,6 +269,7 @@ export async function sendMessage(
     .insert({
       chat_id: chatId,
       content: content.trim(),
+      message_type: messageType,
       sender_id: senderId,
     })
     .select(messageSelect)
