@@ -1,14 +1,38 @@
+"use client";
+
 import { DashboardCard } from "@/components/dashboard/DashboardCard";
 import { AppShell } from "@/components/layout/AppShell";
-import { mockChats } from "@/data/mock-chats";
-import { mockReports } from "@/data/mock-reports";
-import type { ReactElement } from "react";
-
-const parentId = "parent-1";
+import {
+  getParentClassAssignments,
+  type ParentClassAssignment,
+} from "@/lib/classes";
+import { type ReactElement, useEffect, useState } from "react";
 
 export default function ParentDashboardPage(): ReactElement {
-  const latestReports = mockReports.filter((report) => report.parentId === parentId);
-  const messages = mockChats.filter((chat) => chat.parentId === parentId);
+  const [assignments, setAssignments] = useState<ParentClassAssignment[]>([]);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+
+  async function loadAssignments() {
+    setErrorMessage("");
+    setIsLoading(true);
+
+    try {
+      setAssignments(await getParentClassAssignments());
+    } catch {
+      setErrorMessage("Could not load your assigned classes. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    const timerId = window.setTimeout(() => {
+      void loadAssignments();
+    }, 0);
+
+    return () => window.clearTimeout(timerId);
+  }, []);
 
   return (
     <AppShell>
@@ -20,25 +44,38 @@ export default function ParentDashboardPage(): ReactElement {
           Parent dashboard
         </h1>
         <p className="mt-3 text-base leading-7 text-slate-600">
-          Mobile-first view for reports and supervised messages.
+          Mobile-first view for your assigned classes.
         </p>
       </section>
 
       <section className="mt-8 grid gap-4">
-        <DashboardCard label="Class assignment status">
-          Your account is active. Waiting for CEO to assign your class.
+        <DashboardCard label="Assigned classes" value={assignments.length}>
+          {isLoading ? (
+            <p>Loading assigned classes...</p>
+          ) : errorMessage ? (
+            <p className="text-red-700">{errorMessage}</p>
+          ) : assignments.length === 0 ? (
+            <p>Your account is active. Waiting for CEO to assign your class.</p>
+          ) : (
+            assignments.map((assignment) => (
+              <div key={assignment.id}>
+                <p className="font-semibold text-slate-950">
+                  {assignment.class_groups?.name ?? "Assigned class"}
+                </p>
+                <p>{assignment.class_groups?.code ?? "No class code"}</p>
+                {assignment.child_name ? (
+                  <p>Child: {assignment.child_name}</p>
+                ) : null}
+              </div>
+            ))
+          )}
         </DashboardCard>
-        <DashboardCard label="Latest reports" value={latestReports.length}>
-          {latestReports.map((report) => (
-            <p key={report.id}>{report.content}</p>
-          ))}
+        <DashboardCard label="Reports">
+          Reports will appear here after the reports system is added.
         </DashboardCard>
-        <DashboardCard label="Class announcements">
-          Oxford Phonics A practiced reading routines today.
-        </DashboardCard>
-        <DashboardCard label="Messages (supervised chats)" value={messages.length} />
-        <DashboardCard label="Teacher feedback">
-          Reading confidence is improving. Keep practicing short sounds at home.
+        <DashboardCard label="Supervised chats">
+          Chats will appear here after the chat system is added. CEO will be
+          present in every future class group and supervised private chat.
         </DashboardCard>
       </section>
     </AppShell>

@@ -24,12 +24,26 @@ export default function CeoDashboardPage(): ReactElement {
         <p className="mt-3 text-base leading-7 text-slate-600">
           Full control overview for RogerThat.
         </p>
-        <Link
-          className="mt-5 inline-flex min-h-12 items-center justify-center rounded-lg bg-slate-950 px-5 text-base font-semibold text-white"
-          href={ROUTES.ceoUsers}
-        >
-          Manage users
-        </Link>
+        <div className="mt-5 grid gap-3 sm:grid-cols-3">
+          <Link
+            className="inline-flex min-h-12 items-center justify-center rounded-lg bg-slate-950 px-5 text-base font-semibold text-white"
+            href={ROUTES.ceoUsers}
+          >
+            Manage users
+          </Link>
+          <Link
+            className="inline-flex min-h-12 items-center justify-center rounded-lg border border-slate-300 bg-white px-5 text-base font-semibold text-slate-950"
+            href={ROUTES.ceoClasses}
+          >
+            Manage Classes
+          </Link>
+          <Link
+            className="inline-flex min-h-12 items-center justify-center rounded-lg border border-slate-300 bg-white px-5 text-base font-semibold text-slate-950"
+            href={ROUTES.ceoAssignParents}
+          >
+            Assign Parents
+          </Link>
+        </div>
       </section>
 
       <section className="mt-8 grid gap-4">

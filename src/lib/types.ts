@@ -4,7 +4,7 @@ export type AuthProvider = "EMAIL" | "GOOGLE" | "PHONE";
 
 export type ReportType = "CLASS" | "INDIVIDUAL";
 
-export type ParentClassAssignmentStatus = "PENDING" | "APPROVED" | "REMOVED";
+export type ParentClassAssignmentStatus = "ACTIVE" | "REMOVED";
 
 export type User = {
   id: string;
