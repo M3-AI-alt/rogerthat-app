@@ -2,6 +2,7 @@
 
 import { AppShell } from "@/components/layout/AppShell";
 import { PageNav } from "@/components/layout/PageNav";
+import { EmptyState } from "@/components/ui/EmptyState";
 import {
   createClassGroup,
   getClassGroups,
@@ -138,9 +139,10 @@ export default function CeoClassesPage(): ReactElement {
             {isLoading ? (
               <p className="text-sm text-slate-600">Loading classes...</p>
             ) : classes.length === 0 ? (
-              <p className="text-sm text-slate-600">
-                No classes assigned yet.
-              </p>
+              <EmptyState
+                description="Create a class like BOH-A1 to start parent assignment and reporting."
+                title="No classes yet"
+              />
             ) : (
               classes.map((classGroup) => (
                 <article

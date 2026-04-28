@@ -2,6 +2,7 @@
 
 import { AppShell } from "@/components/layout/AppShell";
 import { PageNav } from "@/components/layout/PageNav";
+import { EmptyState } from "@/components/ui/EmptyState";
 import {
   getChatById,
   getChatMessages,
@@ -268,9 +269,10 @@ export default function ChatDetailPage(): ReactElement {
             {isLoading ? (
               <p className="text-sm text-slate-600">Loading messages...</p>
             ) : messages.length === 0 ? (
-              <p className="rounded-lg border border-dashed border-slate-300 bg-white p-4 text-sm text-slate-600">
-                No messages yet.
-              </p>
+              <EmptyState
+                description="Start with a clear supervised message. CEO and Directors can see this conversation."
+                title="No messages yet"
+              />
             ) : (
               messages.map((message) => (
                 <article

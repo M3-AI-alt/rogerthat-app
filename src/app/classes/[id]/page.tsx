@@ -2,6 +2,7 @@
 
 import { AppShell } from "@/components/layout/AppShell";
 import { PageNav } from "@/components/layout/PageNav";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { getClassGroup, type ClassGroup } from "@/lib/classes";
 import { getCurrentUserProfile, type UserProfile } from "@/lib/profile";
 import {
@@ -204,9 +205,10 @@ export default function ClassReportsPage(): ReactElement {
           {isLoading ? (
             <p className="text-sm text-slate-600">Loading reports...</p>
           ) : reports.length === 0 ? (
-            <p className="text-sm text-slate-600">
-              No reports yet.
-            </p>
+            <EmptyState
+              description="Reports will appear here as soon as a teacher sends the first class update."
+              title="No reports yet"
+            />
           ) : (
             reports.map((report) => (
               <article

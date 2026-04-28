@@ -1,6 +1,7 @@
 import { DashboardCard } from "@/components/dashboard/DashboardCard";
 import { AppShell } from "@/components/layout/AppShell";
 import { PageNav } from "@/components/layout/PageNav";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { mockChats } from "@/data/mock-chats";
 import { mockClasses } from "@/data/mock-classes";
 import { mockReports } from "@/data/mock-reports";
@@ -31,9 +32,16 @@ export default function TeacherDashboardPage(): ReactElement {
 
       <section className="mt-8 grid gap-4">
         <DashboardCard label="My classes" value={myClasses.length}>
-          {myClasses.map((classItem) => (
-            <p key={classItem.id}>{classItem.name}</p>
-          ))}
+          {myClasses.length === 0 ? (
+            <EmptyState
+              description="You have no assigned classes yet."
+              title="No classes assigned yet"
+            />
+          ) : (
+            myClasses.map((classItem) => (
+              <p key={classItem.id}>{classItem.name}</p>
+            ))
+          )}
         </DashboardCard>
 
         <div className="grid gap-3">
@@ -51,8 +59,24 @@ export default function TeacherDashboardPage(): ReactElement {
           </button>
         </div>
 
-        <DashboardCard label="My reports" value={myReports.length} />
-        <DashboardCard label="My chats" value={myChats.length} />
+        <DashboardCard label="My reports" value={myReports.length}>
+          {myReports.length === 0 ? (
+            <EmptyState
+              description="Reports will appear after you send class updates."
+              title="No reports yet"
+            />
+          ) : null}
+        </DashboardCard>
+        <DashboardCard label="My chats" value={myChats.length}>
+          {myChats.length === 0 ? (
+            <EmptyState
+              actionHref="/chats"
+              actionLabel="Open chats"
+              description="Supervised conversations will appear after the CEO creates them."
+              title="No conversations yet"
+            />
+          ) : null}
+        </DashboardCard>
       </section>
     </AppShell>
   );

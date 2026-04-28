@@ -3,6 +3,7 @@
 import { DashboardCard } from "@/components/dashboard/DashboardCard";
 import { AppShell } from "@/components/layout/AppShell";
 import { PageNav } from "@/components/layout/PageNav";
+import { EmptyState } from "@/components/ui/EmptyState";
 import {
   getParentClassAssignments,
   type ParentClassAssignment,
@@ -64,7 +65,10 @@ export default function ParentDashboardPage(): ReactElement {
           ) : errorMessage ? (
             <p className="text-red-700">{errorMessage}</p>
           ) : assignments.length === 0 ? (
-            <p>No classes assigned yet.</p>
+            <EmptyState
+              description="Your account is active. Waiting for class assignment."
+              title="No classes assigned yet"
+            />
           ) : (
             assignments.map((assignment) => (
               <div key={assignment.id}>
@@ -89,7 +93,10 @@ export default function ParentDashboardPage(): ReactElement {
           )}
         </DashboardCard>
         <DashboardCard label="Reports">
-          No reports yet.
+          <EmptyState
+            description="Reports will appear after your class is assigned and a teacher sends a daily report."
+            title="No reports yet"
+          />
         </DashboardCard>
         <DashboardCard label="Supervised chats">
           Use My Chats to view supervised class and private chats. CEO and

@@ -1,6 +1,7 @@
 import { DashboardCard } from "@/components/dashboard/DashboardCard";
 import { AppShell } from "@/components/layout/AppShell";
 import { PageNav } from "@/components/layout/PageNav";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { mockChats } from "@/data/mock-chats";
 import { mockClasses } from "@/data/mock-classes";
 import { mockReports } from "@/data/mock-reports";
@@ -31,9 +32,31 @@ export default function DirectorDashboardPage(): ReactElement {
         >
           My Chats
         </Link>
-        <DashboardCard label="Classes supervised" value={mockClasses.length} />
+        {mockClasses.length === 0 && mockChats.length === 0 ? (
+          <EmptyState
+            description="No supervision tasks yet."
+            title="No supervision tasks yet"
+          />
+        ) : null}
+        <DashboardCard label="Classes supervised" value={mockClasses.length}>
+          {mockClasses.length === 0 ? (
+            <EmptyState
+              description="Supervised classes will appear after CEO setup."
+              title="No classes yet"
+            />
+          ) : null}
+        </DashboardCard>
         <DashboardCard label="Reports to review" value={mockReports.length} />
-        <DashboardCard label="Active chats" value={mockChats.length} />
+        <DashboardCard label="Active chats" value={mockChats.length}>
+          {mockChats.length === 0 ? (
+            <EmptyState
+              actionHref="/chats"
+              actionLabel="Open chats"
+              description="Supervised conversations will appear here."
+              title="No conversations yet"
+            />
+          ) : null}
+        </DashboardCard>
         <DashboardCard label="Teachers monitored" value={mockTeachers.length} />
       </section>
     </AppShell>

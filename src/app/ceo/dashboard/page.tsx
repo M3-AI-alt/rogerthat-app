@@ -3,6 +3,7 @@
 import { DashboardCard } from "@/components/dashboard/DashboardCard";
 import { AppShell } from "@/components/layout/AppShell";
 import { PageNav } from "@/components/layout/PageNav";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { mockChats } from "@/data/mock-chats";
 import { mockParents } from "@/data/mock-parents";
 import { mockReports } from "@/data/mock-reports";
@@ -52,7 +53,7 @@ export default function CeoDashboardPage(): ReactElement {
         <p className="mt-3 text-base leading-7 text-slate-600">
           Full control overview for RogerThat.
         </p>
-        <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
           <Link
             className="inline-flex min-h-12 items-center justify-center rounded-lg bg-slate-950 px-5 text-base font-semibold text-white"
             href={ROUTES.ceoUsers}
@@ -77,10 +78,24 @@ export default function CeoDashboardPage(): ReactElement {
           >
             Manage Chats
           </Link>
+          <Link
+            className="inline-flex min-h-12 items-center justify-center rounded-lg border border-blue-200 bg-blue-50 px-5 text-base font-semibold text-blue-800"
+            href="/demo-guide"
+          >
+            Demo Guide
+          </Link>
         </div>
       </section>
 
       <section className="mt-8 grid gap-4">
+        {!isLoadingClasses && classes.length === 0 ? (
+          <EmptyState
+            actionHref={ROUTES.ceoClasses}
+            actionLabel="Create your first class"
+            description="Classes unlock parent assignments, class reports, and supervised conversations."
+            title="Create your first class"
+          />
+        ) : null}
         <DashboardCard label="Total Directors" value={mockDirectors.length} />
         <DashboardCard
           label="Directors with Admin Access"
@@ -95,7 +110,12 @@ export default function CeoDashboardPage(): ReactElement {
           {isLoadingClasses ? (
             <p>Loading classes...</p>
           ) : classes.length === 0 ? (
-            <p>No classes assigned yet.</p>
+            <EmptyState
+              actionHref={ROUTES.ceoClasses}
+              actionLabel="Manage classes"
+              description="Create a class such as BOH-A1 to start the demo flow."
+              title="No classes yet"
+            />
           ) : (
             classes.map((classGroup) => (
               <p key={classGroup.id}>

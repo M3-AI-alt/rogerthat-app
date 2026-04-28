@@ -116,6 +116,22 @@ a:focus-visible {
   animation: check-pop 3.6s ease-in-out infinite;
 }
 
+@keyframes page-enter {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-page-enter {
+  animation: page-enter 220ms ease-out both;
+}
+
 .animation-delay-0 {
   animation-delay: 0ms;
 }

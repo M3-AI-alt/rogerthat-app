@@ -2,6 +2,7 @@
 
 import { AppShell } from "@/components/layout/AppShell";
 import { PageNav } from "@/components/layout/PageNav";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { getMyChats, type Chat } from "@/lib/chats";
 import { supabase } from "@/lib/supabase/client";
 import Link from "next/link";
@@ -158,9 +159,10 @@ export default function ChatsPage(): ReactElement {
               Loading chats...
             </p>
           ) : chats.length === 0 ? (
-            <p className="rounded-lg border border-slate-200 bg-white p-5 text-sm text-slate-600">
-              No conversations yet.
-            </p>
+            <EmptyState
+              description="Supervised conversations will appear after the CEO creates class or private chats."
+              title="No conversations yet"
+            />
           ) : (
             chats.map((chat) => (
               <Link

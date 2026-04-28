@@ -185,8 +185,8 @@ export default function CeoUsersPage(): ReactElement {
             CEO, Directors, Teachers, and Parents
           </h2>
           <p className="mt-2 text-sm leading-6 text-slate-600">
-            Online/offline is a placeholder until real presence tracking is
-            added.
+            Online/offline is a visual status until real presence tracking is
+            added later.
           </p>
           <div className="mt-5 grid gap-3">
             {isLoading ? (
@@ -223,7 +223,7 @@ export default function CeoUsersPage(): ReactElement {
 
         <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
           <p className="text-sm font-medium text-slate-500">
-            Create staff account placeholder
+            Staff account creation
           </p>
           <h2 className="mt-1 text-xl font-semibold text-slate-950">
             Director or Teacher

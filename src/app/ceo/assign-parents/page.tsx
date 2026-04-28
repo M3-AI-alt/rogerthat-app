@@ -2,6 +2,7 @@
 
 import { AppShell } from "@/components/layout/AppShell";
 import { PageNav } from "@/components/layout/PageNav";
+import { EmptyState } from "@/components/ui/EmptyState";
 import {
   assignParentToClass,
   getClassGroups,
@@ -220,9 +221,12 @@ export default function CeoAssignParentsPage(): ReactElement {
             {isLoading ? (
               <p className="text-sm text-slate-600">Loading assignments...</p>
             ) : assignments.length === 0 ? (
-              <p className="text-sm text-slate-600">
-                No active parent class assignments yet.
-              </p>
+              <EmptyState
+                actionHref={ROUTES.ceoClasses}
+                actionLabel="Create or review classes"
+                description="Assign a parent after at least one class and one parent profile exist."
+                title="No parents assigned yet"
+              />
             ) : (
               assignments.map((assignment) => (
                 <article

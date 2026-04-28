@@ -2,6 +2,7 @@
 
 import { AppShell } from "@/components/layout/AppShell";
 import { PageNav } from "@/components/layout/PageNav";
+import { EmptyState } from "@/components/ui/EmptyState";
 import {
   createClassGroupChat,
   createSupervisedPrivateChat,
@@ -337,7 +338,10 @@ export default function CeoChatsPage(): ReactElement {
             {isLoading ? (
               <p className="text-sm text-slate-600">Loading chats...</p>
             ) : chats.length === 0 ? (
-              <p className="text-sm text-slate-600">No conversations yet.</p>
+              <EmptyState
+                description="Create a class group chat or supervised private chat to start the demo."
+                title="No conversations yet"
+              />
             ) : (
               chats.map((chat) => (
                 <Link
