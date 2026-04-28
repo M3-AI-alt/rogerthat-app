@@ -29,7 +29,7 @@ const guideSections = [
     ],
   },
   {
-    title: "4. View reports",
+    title: "4. Send a report message",
     steps: [
       "Open the class room.",
       "Log in as a teacher to send a report message.",
@@ -60,7 +60,7 @@ export default function DemoGuidePage(): ReactElement {
         </h1>
         <p className="mt-3 max-w-2xl text-base leading-7 text-slate-600">
           Use this checklist to walk through the core demo: CEO setup, parent
-          assignment, class rooms, reports, and private chats.
+          assignment, class rooms, report messages, and private chats.
         </p>
         <div className="mt-5 flex flex-wrap gap-3">
           <Link

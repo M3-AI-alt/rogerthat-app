@@ -141,7 +141,7 @@ export default function CeoClassesPage(): ReactElement {
               <p className="text-sm text-slate-600">Loading classes...</p>
             ) : classes.length === 0 ? (
               <EmptyState
-                description="Create a class like BOH-A1 to start parent assignment and reporting."
+                description="Create a class like BOH-A1 to start parent assignment and room messaging."
                 title="No classes yet"
               />
             ) : (

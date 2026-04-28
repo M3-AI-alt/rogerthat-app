@@ -12,7 +12,7 @@ const roleDetails = [
   {
     label: "Director",
     description:
-      "Can monitor reports and chats but cannot take or export the full parent database.",
+      "Can monitor room messages and private chats but cannot take or export the full parent database.",
   },
   {
     label: "Director with Admin access",
@@ -22,12 +22,12 @@ const roleDetails = [
   {
     label: "Teacher",
     description:
-      "Reports to parents and can only see parents inside assigned classes.",
+      "Sends messages and report updates inside assigned class rooms.",
   },
   {
     label: "Parent",
     description:
-      "Uses the mobile-first experience to read reports and messages for assigned class rooms only.",
+      "Uses the mobile-first experience to read room messages and report updates for assigned class rooms only.",
   },
   {
     label: "Class Room",

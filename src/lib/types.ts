@@ -2,8 +2,6 @@ export type UserRole = "CEO" | "DIRECTOR" | "TEACHER" | "PARENT";
 
 export type AuthProvider = "EMAIL" | "GOOGLE" | "PHONE";
 
-export type ReportType = "CLASS" | "INDIVIDUAL";
-
 export type ParentClassAssignmentStatus = "ACTIVE" | "REMOVED";
 
 export type User = {
@@ -42,16 +40,6 @@ export type ParentClassAssignment = {
   classId: string;
   childName?: string;
   status: ParentClassAssignmentStatus;
-};
-
-export type DailyReport = {
-  id: string;
-  classId: string;
-  teacherId: string;
-  parentId?: string;
-  type: ReportType;
-  content: string;
-  createdAt: string;
 };
 
 export type SupervisedChat = {

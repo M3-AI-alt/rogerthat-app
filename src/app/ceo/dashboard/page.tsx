@@ -62,7 +62,6 @@ export default function CeoDashboardPage(): ReactElement {
     ParentClassAssignment[]
   >([]);
   const [chats, setChats] = useState<Chat[]>([]);
-  const [reportCount, setReportCount] = useState(0);
   const [teacherCount, setTeacherCount] = useState(0);
   const [parentCount, setParentCount] = useState(0);
   const [directorCount, setDirectorCount] = useState(0);
@@ -78,7 +77,6 @@ export default function CeoDashboardPage(): ReactElement {
         parentAssignmentData,
         chatData,
         profileResult,
-        reportResult,
       ] = await Promise.all([
         getClassGroups(),
         getTeacherClassAssignments(),
@@ -88,15 +86,10 @@ export default function CeoDashboardPage(): ReactElement {
           .from("profiles")
           .select("role")
           .in("role", ["DIRECTOR", "TEACHER", "PARENT"]),
-        supabase.from("class_reports").select("id", { count: "exact" }),
       ]);
 
       if (profileResult.error) {
         throw profileResult.error;
-      }
-
-      if (reportResult.error) {
-        throw reportResult.error;
       }
 
       const profiles = profileResult.data ?? [];
@@ -104,7 +97,6 @@ export default function CeoDashboardPage(): ReactElement {
       setTeacherAssignments(teacherAssignmentData);
       setParentAssignments(parentAssignmentData);
       setChats(chatData);
-      setReportCount(reportResult.count ?? 0);
       setDirectorCount(
         profiles.filter((profile) => profile.role === "DIRECTOR").length
       );
@@ -119,7 +111,6 @@ export default function CeoDashboardPage(): ReactElement {
       setTeacherAssignments([]);
       setParentAssignments([]);
       setChats([]);
-      setReportCount(0);
     } finally {
       setIsLoadingClasses(false);
     }
@@ -212,7 +203,7 @@ export default function CeoDashboardPage(): ReactElement {
               title="Create/open class room"
             />
             <SetupChecklistItem
-              description="Teacher opens the class and sends the first update."
+              description="Teacher opens the room and sends a message or report."
               href={
                 chats.find((chat) => chat.chat_type === "CLASS_GROUP_CHAT")
                   ? `/chats/${
@@ -221,8 +212,8 @@ export default function CeoDashboardPage(): ReactElement {
                     }`
                   : ROUTES.ceoChats
               }
-              isDone={reportCount > 0}
-              title="Send first report"
+              isDone={chats.some((chat) => chat.chat_type === "CLASS_GROUP_CHAT")}
+              title="Open Room"
             />
           </div>
         </div>
@@ -231,7 +222,7 @@ export default function CeoDashboardPage(): ReactElement {
           <EmptyState
             actionHref={ROUTES.ceoClasses}
             actionLabel="Create your first class"
-            description="Class rooms unlock parent assignments, teacher reports, and messages."
+            description="Class rooms unlock parent assignments, teacher messages, and report updates."
             title="Create your first class room"
           />
         ) : null}
@@ -242,9 +233,6 @@ export default function CeoDashboardPage(): ReactElement {
           <DashboardCard label="Classes" value={classes.length} />
           <DashboardCard label="Rooms & Chats" value={chats.length} />
         </div>
-        <DashboardCard label="Reports" value={reportCount}>
-          Report messages are sent inside class rooms.
-        </DashboardCard>
         <DashboardCard label="Open class rooms">
           {isLoadingClasses ? (
             <p>Loading classes...</p>

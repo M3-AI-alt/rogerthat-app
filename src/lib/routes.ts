@@ -12,7 +12,6 @@ export const ROUTES = {
   parents: "/parents",
   teachers: "/teachers",
   directors: "/directors",
-  reports: "/reports",
   chats: "/chats",
   settings: "/settings",
   login: "/login",

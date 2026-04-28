@@ -4,7 +4,6 @@ import { PageNav } from "@/components/layout/PageNav";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { mockChats } from "@/data/mock-chats";
 import { mockClasses } from "@/data/mock-classes";
-import { mockReports } from "@/data/mock-reports";
 import { mockTeachers } from "@/data/mock-users";
 import Link from "next/link";
 import type { ReactElement } from "react";
@@ -21,7 +20,7 @@ export default function DirectorDashboardPage(): ReactElement {
           Director dashboard
         </h1>
         <p className="mt-3 text-base leading-7 text-slate-600">
-          Overview for class rooms, private chats, reports, and teachers.
+          Overview for class rooms, private chats, messages, and teachers.
         </p>
       </section>
 
@@ -46,7 +45,6 @@ export default function DirectorDashboardPage(): ReactElement {
             />
           ) : null}
         </DashboardCard>
-        <DashboardCard label="Reports to review" value={mockReports.length} />
         <DashboardCard label="Rooms & Chats" value={mockChats.length}>
           {mockChats.length === 0 ? (
             <EmptyState

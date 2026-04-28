@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "RogerThat by Ben Oxford Hub",
-  description: "Daily Parent Reporting System for Ben Oxford Hub",
+  description: "School chat rooms and supervised messages for Ben Oxford Hub",
 };
 
 export default function RootLayout({

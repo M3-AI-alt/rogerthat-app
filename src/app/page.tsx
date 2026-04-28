@@ -5,7 +5,7 @@ import type { CSSProperties, ReactElement } from "react";
 
 const notifications = [
   {
-    title: "Report Sent",
+    title: "Report Message",
     time: "9:30 AM",
     icon: "↗",
     color: "bg-emerald-100 text-emerald-600",
@@ -40,13 +40,13 @@ const entryOptions = [
   {
     title: "Get access to your child’s class",
     description:
-      "Request access and start receiving daily reports from your child’s teacher.",
+      "Request access and join your child’s class room messages.",
     href: ROUTES.signup,
     action: "Request Access",
   },
   {
     title: "Teacher login",
-    description: "Access your classes and send daily reports.",
+    description: "Access your rooms and send messages or report updates.",
     href: ROUTES.login,
     action: "Log in",
   },
@@ -65,9 +65,9 @@ const entryOptions = [
 ] as const;
 
 const valuePreviews = [
-  "Daily reports, structured and clear",
-  "Parents see only what matters",
-  "Every conversation is supervised",
+  "Class rooms for school communication",
+  "Report messages inside chat",
+  "Every room is supervised",
 ] as const;
 
 const heroImages = [

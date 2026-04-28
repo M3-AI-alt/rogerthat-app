@@ -55,7 +55,7 @@ export default function ParentDashboardPage(): ReactElement {
           Parent dashboard
         </h1>
         <p className="mt-3 text-base leading-7 text-slate-600">
-          Your class rooms, private chats, and latest reports.
+          Your class rooms and private chats.
         </p>
       </section>
 
@@ -120,22 +120,6 @@ export default function ParentDashboardPage(): ReactElement {
               })}
             </div>
           )}
-        </DashboardCard>
-        <DashboardCard label="Latest Reports">
-          {(() => {
-            const firstClassRoom = chats.find(
-              (chat) => chat.chat_type === "CLASS_GROUP_CHAT"
-            );
-
-            return (
-              <EmptyState
-                actionHref={firstClassRoom ? `/chats/${firstClassRoom.id}` : undefined}
-                actionLabel={firstClassRoom ? "Open Room" : undefined}
-                description="Report messages will appear in your class room."
-                title="No report messages yet"
-              />
-            );
-          })()}
         </DashboardCard>
         <DashboardCard label="My Private Chats">
           {chats.filter((chat) => chat.chat_type === "SUPERVISED_PRIVATE_CHAT")
