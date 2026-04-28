@@ -122,15 +122,23 @@ export default function LoginPage(): ReactElement {
           </Link>
         </div>
 
-        <div className="mt-10 flex justify-center">
-          <Image
-            alt="Ben Oxford Hub logo"
-            className="h-16 w-16 rounded-full object-contain shadow-sm"
-            height={64}
-            priority
-            src="/ben-oxford-logo.png"
-            width={64}
-          />
+        <div className="mt-10 flex flex-col items-center gap-2">
+          <div className="inline-flex min-h-14 items-center gap-3 rounded-2xl bg-[#071b45] px-4 py-3 text-white shadow-xl shadow-blue-950/20">
+            <Image
+              alt="Ben Oxford Hub logo"
+              className="h-9 w-9 object-contain"
+              height={36}
+              priority
+              src="/ben-oxford-logo.png"
+              width={36}
+            />
+            <span className="text-2xl font-bold leading-none tracking-normal">
+              RogerThat
+            </span>
+          </div>
+          <p className="text-sm font-semibold tracking-wide text-[#35517f]">
+            by Ben Oxford Hub
+          </p>
         </div>
 
         <div className="mt-6 text-center">

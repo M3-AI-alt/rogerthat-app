@@ -38,23 +38,23 @@ export function AppHeader(): ReactElement {
     <header className="border-b border-slate-200 bg-white">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-6 py-4">
         <Link
-          className="group flex items-center gap-3 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-500/30"
+          className="group inline-flex flex-col items-start gap-1 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-500/30"
           href="/"
         >
-          <Image
-            alt="Ben Oxford Hub logo"
-            className="h-10 w-10 rounded-full object-contain shadow-sm transition duration-200 group-hover:scale-105"
-            height={40}
-            src="/ben-oxford-logo.png"
-            width={40}
-          />
-          <span>
-            <span className="block text-xl font-bold leading-5 tracking-normal text-[#071b45]">
+          <span className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#071b45] px-3 py-2 text-white shadow-md shadow-blue-950/10 transition duration-200 group-hover:-translate-y-0.5 group-hover:scale-[1.01]">
+            <Image
+              alt="Ben Oxford Hub logo"
+              className="h-7 w-7 object-contain"
+              height={28}
+              src="/ben-oxford-logo.png"
+              width={28}
+            />
+            <span className="block text-xl font-bold leading-5 tracking-normal">
               RogerThat
             </span>
-            <span className="block text-xs font-medium tracking-wide text-[#35517f]">
-              by Ben Oxford Hub
-            </span>
+          </span>
+          <span className="pl-1 text-xs font-semibold tracking-wide text-[#35517f]">
+            by Ben Oxford Hub
           </span>
         </Link>
         <div className="flex items-center gap-2">

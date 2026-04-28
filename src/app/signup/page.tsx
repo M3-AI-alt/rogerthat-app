@@ -120,22 +120,27 @@ export default function SignupPage(): ReactElement {
           </Link>
         </div>
 
-        <div className="mt-8 rounded-3xl bg-[#071b45] p-6 text-white shadow-2xl shadow-blue-950/20">
-          <Image
-            alt="Ben Oxford Hub logo"
-            className="h-14 w-14 rounded-full bg-white object-contain shadow-sm"
-            height={56}
-            priority
-            src="/ben-oxford-logo.png"
-            width={56}
-          />
-          <p className="mt-6 text-sm font-semibold uppercase tracking-wide text-blue-200">
-            RogerThat
+        <div className="mt-8 rounded-3xl bg-white p-6 shadow-2xl shadow-blue-950/10 ring-1 ring-slate-200">
+          <div className="inline-flex min-h-14 items-center gap-3 rounded-2xl bg-[#071b45] px-4 py-3 text-white shadow-xl shadow-blue-950/20">
+            <Image
+              alt="Ben Oxford Hub logo"
+              className="h-9 w-9 object-contain"
+              height={36}
+              priority
+              src="/ben-oxford-logo.png"
+              width={36}
+            />
+            <span className="text-2xl font-bold leading-none tracking-normal">
+              RogerThat
+            </span>
+          </div>
+          <p className="mt-2 text-sm font-semibold tracking-wide text-[#35517f]">
+            by Ben Oxford Hub
           </p>
-          <h1 className="mt-3 text-3xl font-bold tracking-normal">
+          <h1 className="mt-6 text-3xl font-bold tracking-normal text-slate-950">
             Parent Access Request
           </h1>
-          <p className="mt-3 text-sm leading-6 text-blue-100">
+          <p className="mt-3 text-sm leading-6 text-slate-600">
             Parent signup only. Teacher, Director, and CEO accounts are created
             by school administration.
           </p>
