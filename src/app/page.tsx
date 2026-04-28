@@ -64,9 +64,9 @@ const entryOptions = [
 ] as const;
 
 const valuePreviews = [
-  "Daily reports arrive in one supervised place.",
-  "Parents only see their assigned classes.",
-  "CEO and Directors stay visible in communication.",
+  "Daily reports, structured and clear",
+  "Parents see only what matters",
+  "Every conversation is supervised",
 ] as const;
 
 function BrandLockup(): ReactElement {
