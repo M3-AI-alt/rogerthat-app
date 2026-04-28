@@ -1,16 +1,42 @@
+"use client";
+
 import { DashboardCard } from "@/components/dashboard/DashboardCard";
 import { AppShell } from "@/components/layout/AppShell";
 import { mockChats } from "@/data/mock-chats";
-import { mockClasses } from "@/data/mock-classes";
 import { mockParents } from "@/data/mock-parents";
 import { mockReports } from "@/data/mock-reports";
 import { mockDirectors, mockTeachers } from "@/data/mock-users";
+import { getClassGroups, type ClassGroup } from "@/lib/classes";
 import { ROUTES } from "@/lib/routes";
 import Link from "next/link";
-import type { ReactElement } from "react";
+import { type ReactElement, useEffect, useState } from "react";
 
 export default function CeoDashboardPage(): ReactElement {
-  const adminDirectors = mockDirectors.filter((director) => director.hasAdminAccess);
+  const adminDirectors = mockDirectors.filter(
+    (director) => director.hasAdminAccess
+  );
+  const [classes, setClasses] = useState<ClassGroup[]>([]);
+  const [isLoadingClasses, setIsLoadingClasses] = useState(true);
+
+  async function loadClasses() {
+    setIsLoadingClasses(true);
+
+    try {
+      setClasses(await getClassGroups());
+    } catch {
+      setClasses([]);
+    } finally {
+      setIsLoadingClasses(false);
+    }
+  }
+
+  useEffect(() => {
+    const timerId = window.setTimeout(() => {
+      void loadClasses();
+    }, 0);
+
+    return () => window.clearTimeout(timerId);
+  }, []);
 
   return (
     <AppShell>
@@ -54,9 +80,27 @@ export default function CeoDashboardPage(): ReactElement {
         />
         <DashboardCard label="Teachers" value={mockTeachers.length} />
         <DashboardCard label="Parents" value={mockParents.length} />
-        <DashboardCard label="Classes" value={mockClasses.length} />
+        <DashboardCard label="Classes" value={classes.length} />
         <DashboardCard label="Reports Today" value={mockReports.length} />
         <DashboardCard label="Supervised Chats" value={mockChats.length} />
+        <DashboardCard label="Open class reporting rooms">
+          {isLoadingClasses ? (
+            <p>Loading classes...</p>
+          ) : classes.length === 0 ? (
+            <p>No classes created yet.</p>
+          ) : (
+            classes.map((classGroup) => (
+              <p key={classGroup.id}>
+                <Link
+                  className="font-semibold text-slate-950 underline-offset-4 hover:underline"
+                  href={`/classes/${classGroup.id}`}
+                >
+                  {classGroup.code} - {classGroup.name}
+                </Link>
+              </p>
+            ))
+          )}
+        </DashboardCard>
       </section>
     </AppShell>
   );

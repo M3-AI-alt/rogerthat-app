@@ -6,6 +6,7 @@ import {
   getParentClassAssignments,
   type ParentClassAssignment,
 } from "@/lib/classes";
+import Link from "next/link";
 import { type ReactElement, useEffect, useState } from "react";
 
 export default function ParentDashboardPage(): ReactElement {
@@ -59,9 +60,18 @@ export default function ParentDashboardPage(): ReactElement {
           ) : (
             assignments.map((assignment) => (
               <div key={assignment.id}>
-                <p className="font-semibold text-slate-950">
-                  {assignment.class_groups?.name ?? "Assigned class"}
-                </p>
+                {assignment.class_id ? (
+                  <Link
+                    className="font-semibold text-slate-950 underline-offset-4 hover:underline"
+                    href={`/classes/${assignment.class_id}`}
+                  >
+                    {assignment.class_groups?.name ?? "Assigned class"}
+                  </Link>
+                ) : (
+                  <p className="font-semibold text-slate-950">
+                    {assignment.class_groups?.name ?? "Assigned class"}
+                  </p>
+                )}
                 <p>{assignment.class_groups?.code ?? "No class code"}</p>
                 {assignment.child_name ? (
                   <p>Child: {assignment.child_name}</p>

@@ -38,6 +38,20 @@ export async function getClassGroups(): Promise<ClassGroup[]> {
   return data ?? [];
 }
 
+export async function getClassGroup(classId: string): Promise<ClassGroup | null> {
+  const { data, error } = await supabase
+    .from("class_groups")
+    .select(classGroupSelect)
+    .eq("id", classId)
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}
+
 export async function createClassGroup(input: {
   name: string;
   code: string;
