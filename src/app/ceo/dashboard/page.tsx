@@ -2,6 +2,7 @@
 
 import { DashboardCard } from "@/components/dashboard/DashboardCard";
 import { AppShell } from "@/components/layout/AppShell";
+import { PageNav } from "@/components/layout/PageNav";
 import { mockChats } from "@/data/mock-chats";
 import { mockParents } from "@/data/mock-parents";
 import { mockReports } from "@/data/mock-reports";
@@ -40,6 +41,7 @@ export default function CeoDashboardPage(): ReactElement {
 
   return (
     <AppShell>
+      <PageNav />
       <section>
         <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">
           CEO / Owner
@@ -93,7 +95,7 @@ export default function CeoDashboardPage(): ReactElement {
           {isLoadingClasses ? (
             <p>Loading classes...</p>
           ) : classes.length === 0 ? (
-            <p>No classes created yet.</p>
+            <p>No classes assigned yet.</p>
           ) : (
             classes.map((classGroup) => (
               <p key={classGroup.id}>

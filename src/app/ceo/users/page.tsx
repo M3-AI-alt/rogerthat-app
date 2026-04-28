@@ -141,7 +141,7 @@ export default function CeoUsersPage(): ReactElement {
 
     if (error) {
       setErrorMessage(
-        "Could not load profiles. Make sure you are logged in as an approved CEO and the CEO profile policies SQL has been run."
+        "Could not load profiles. Please check your CEO access and try again."
       );
       return;
     }

@@ -2,6 +2,7 @@
 
 import { DashboardCard } from "@/components/dashboard/DashboardCard";
 import { AppShell } from "@/components/layout/AppShell";
+import { PageNav } from "@/components/layout/PageNav";
 import {
   getParentClassAssignments,
   type ParentClassAssignment,
@@ -37,6 +38,7 @@ export default function ParentDashboardPage(): ReactElement {
 
   return (
     <AppShell>
+      <PageNav />
       <section>
         <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">
           Parent
@@ -62,7 +64,7 @@ export default function ParentDashboardPage(): ReactElement {
           ) : errorMessage ? (
             <p className="text-red-700">{errorMessage}</p>
           ) : assignments.length === 0 ? (
-            <p>Your account is active. Waiting for CEO to assign your class.</p>
+            <p>No classes assigned yet.</p>
           ) : (
             assignments.map((assignment) => (
               <div key={assignment.id}>
@@ -87,7 +89,7 @@ export default function ParentDashboardPage(): ReactElement {
           )}
         </DashboardCard>
         <DashboardCard label="Reports">
-          Reports will appear here after the reports system is added.
+          No reports yet.
         </DashboardCard>
         <DashboardCard label="Supervised chats">
           Use My Chats to view supervised class and private chats. CEO and

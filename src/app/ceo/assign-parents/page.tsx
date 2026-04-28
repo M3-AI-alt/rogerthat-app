@@ -62,7 +62,7 @@ export default function CeoAssignParentsPage(): ReactElement {
       setAssignments(assignmentResult);
     } catch {
       setErrorMessage(
-        "Could not load assignment data. Make sure you are logged in as an approved CEO and the class SQL has been run."
+        "Could not load assignment data. Please check your CEO access and try again."
       );
     } finally {
       setIsLoading(false);

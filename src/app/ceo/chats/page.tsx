@@ -73,7 +73,7 @@ export default function CeoChatsPage(): ReactElement {
       setTeachers(profiles.filter((profile) => profile.role === "TEACHER"));
     } catch {
       setErrorMessage(
-        "Could not load chats. Make sure you are logged in as an approved CEO and the supervised chat SQL has been run."
+        "Could not load conversations. Please check your CEO access and try again."
       );
     } finally {
       setIsLoading(false);
@@ -93,7 +93,7 @@ export default function CeoChatsPage(): ReactElement {
       await loadChatData();
     } catch {
       setErrorMessage(
-        "Could not create class group chat. Choose a class and confirm the chat SQL has been run."
+        "Could not create class group chat. Choose a class and try again."
       );
     } finally {
       setIsCreatingClassChat(false);
@@ -337,7 +337,7 @@ export default function CeoChatsPage(): ReactElement {
             {isLoading ? (
               <p className="text-sm text-slate-600">Loading chats...</p>
             ) : chats.length === 0 ? (
-              <p className="text-sm text-slate-600">No chats created yet.</p>
+              <p className="text-sm text-slate-600">No conversations yet.</p>
             ) : (
               chats.map((chat) => (
                 <Link

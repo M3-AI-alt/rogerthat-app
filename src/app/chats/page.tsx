@@ -49,7 +49,7 @@ export default function ChatsPage(): ReactElement {
       setChats(await getMyChats());
     } catch {
       setErrorMessage(
-        "Could not load your chats. Make sure the supervised chat SQL has been run."
+        "Could not load your conversations. Please try again."
       );
     } finally {
       setIsLoading(false);
@@ -141,7 +141,7 @@ export default function ChatsPage(): ReactElement {
           </div>
           {showNewMessageHint ? (
             <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm font-semibold text-amber-900">
-              New message received. Sound alert placeholder.
+              New message received.
             </p>
           ) : null}
         </div>
@@ -159,7 +159,7 @@ export default function ChatsPage(): ReactElement {
             </p>
           ) : chats.length === 0 ? (
             <p className="rounded-lg border border-slate-200 bg-white p-5 text-sm text-slate-600">
-              No chats available yet.
+              No conversations yet.
             </p>
           ) : (
             chats.map((chat) => (

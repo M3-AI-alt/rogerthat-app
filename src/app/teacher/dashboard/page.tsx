@@ -1,5 +1,6 @@
 import { DashboardCard } from "@/components/dashboard/DashboardCard";
 import { AppShell } from "@/components/layout/AppShell";
+import { PageNav } from "@/components/layout/PageNav";
 import { mockChats } from "@/data/mock-chats";
 import { mockClasses } from "@/data/mock-classes";
 import { mockReports } from "@/data/mock-reports";
@@ -15,6 +16,7 @@ export default function TeacherDashboardPage(): ReactElement {
 
   return (
     <AppShell>
+      <PageNav />
       <section>
         <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">
           Teacher

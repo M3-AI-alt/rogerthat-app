@@ -25,6 +25,28 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+a,
+button {
+  transition-duration: 180ms;
+  transition-property:
+    background-color, border-color, color, box-shadow, opacity, transform;
+  transition-timing-function: ease;
+}
+
+button:active,
+a:active {
+  transform: scale(0.98);
+}
+
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+button:focus-visible,
+a:focus-visible {
+  outline: 3px solid rgb(59 130 246 / 0.35);
+  outline-offset: 2px;
+}
+
 @keyframes float-card {
   0% {
     opacity: 0;

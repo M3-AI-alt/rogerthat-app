@@ -105,7 +105,7 @@ export default function ChatDetailPage(): ReactElement {
       }
     } catch {
       setErrorMessage(
-        "Could not load this chat. Make sure you are a chat member and the supervised chat SQL has been run."
+        "Could not load this conversation. Make sure you have access and try again."
       );
     } finally {
       setIsLoading(false);
@@ -259,7 +259,7 @@ export default function ChatDetailPage(): ReactElement {
             </p>
             {showNewMessageHint ? (
               <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm font-semibold text-amber-900">
-                New message received. Sound alert placeholder.
+                New message received.
               </p>
             ) : null}
           </div>

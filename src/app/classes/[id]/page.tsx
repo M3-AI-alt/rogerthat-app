@@ -197,7 +197,7 @@ export default function ClassReportsPage(): ReactElement {
         </p>
         {showNewReportHint ? (
           <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm font-semibold text-amber-900">
-            New report received. Sound alert placeholder.
+            New report received.
           </p>
         ) : null}
         <div className="mt-5 grid gap-3">
@@ -205,7 +205,7 @@ export default function ClassReportsPage(): ReactElement {
             <p className="text-sm text-slate-600">Loading reports...</p>
           ) : reports.length === 0 ? (
             <p className="text-sm text-slate-600">
-              No reports have been sent yet.
+              No reports yet.
             </p>
           ) : (
             reports.map((report) => (

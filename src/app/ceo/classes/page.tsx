@@ -27,7 +27,7 @@ export default function CeoClassesPage(): ReactElement {
       setClasses(await getClassGroups());
     } catch {
       setErrorMessage(
-        "Could not load classes. Make sure you are logged in as an approved CEO and the class SQL has been run."
+        "Could not load classes. Please check your CEO access and try again."
       );
     } finally {
       setIsLoading(false);
@@ -48,7 +48,7 @@ export default function CeoClassesPage(): ReactElement {
       setSuccessMessage("Class created.");
     } catch {
       setErrorMessage(
-        "Could not create class. Check that the code is unique and the class SQL has been run."
+        "Could not create class. Check that the code is unique and try again."
       );
     } finally {
       setIsCreating(false);
@@ -138,7 +138,9 @@ export default function CeoClassesPage(): ReactElement {
             {isLoading ? (
               <p className="text-sm text-slate-600">Loading classes...</p>
             ) : classes.length === 0 ? (
-              <p className="text-sm text-slate-600">No classes created yet.</p>
+              <p className="text-sm text-slate-600">
+                No classes assigned yet.
+              </p>
             ) : (
               classes.map((classGroup) => (
                 <article

@@ -32,7 +32,7 @@ const accountOptions = [
 
 function getSupabaseConfigError(): string {
   if (!supabaseConfig.hasUrl || !supabaseConfig.hasAnonKey) {
-    return "Supabase is not configured. Check NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local, then restart npm run dev.";
+    return "Login is temporarily unavailable. Please contact school administration.";
   }
 
   return "";
@@ -141,8 +141,8 @@ export default function LoginPage(): ReactElement {
             Log into RogerThat
           </h1>
           <p className="mt-3 text-sm leading-6 text-slate-600">
-            Parent requests use email/password today. Phone, Google, and staff
-            account creation come later.
+            Use your school email and password. Parent access starts with an
+            access request.
           </p>
         </div>
 
@@ -211,7 +211,7 @@ export default function LoginPage(): ReactElement {
         <button
           className="min-h-14 rounded-lg border border-slate-300 bg-white px-5 text-base font-bold text-slate-700 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-blue-200 hover:text-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-500/30 active:scale-[0.98]"
           onClick={() =>
-            setStatusMessage("Google login is a placeholder for a later step.")
+            setStatusMessage("Google login is not available yet.")
           }
           type="button"
         >
@@ -261,13 +261,6 @@ export default function LoginPage(): ReactElement {
             )}
           </div>
         ) : null}
-
-        <p className="mt-auto pt-8 text-center text-xs leading-5 text-slate-500">
-          Supabase config:{" "}
-          {supabaseConfig.hasUrl && supabaseConfig.hasAnonKey
-            ? `connected to ${supabaseConfig.urlHost}`
-            : "missing local environment variables"}
-        </p>
       </section>
     </main>
   );

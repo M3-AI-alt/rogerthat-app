@@ -9,7 +9,7 @@ import { type FormEvent, type ReactElement, useState } from "react";
 
 function getSupabaseConfigError(): string {
   if (!supabaseConfig.hasUrl || !supabaseConfig.hasAnonKey) {
-    return "Supabase is not configured. Check NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local, then restart npm run dev.";
+    return "Parent access requests are temporarily unavailable. Please contact school administration.";
   }
 
   return "";
@@ -77,7 +77,7 @@ export default function SignupPage(): ReactElement {
 
       if (profileError) {
         setErrorMessage(
-          "Your account was created, but the parent profile could not be created. Make sure the profiles SQL has been run in Supabase."
+          "Your account was created, but your parent profile could not be completed. Please contact school administration."
         );
         return;
       }
@@ -249,13 +249,6 @@ export default function SignupPage(): ReactElement {
           >
             Log in
           </Link>
-        </p>
-
-        <p className="mt-5 text-center text-xs leading-5 text-slate-500">
-          Supabase config:{" "}
-          {supabaseConfig.hasUrl && supabaseConfig.hasAnonKey
-            ? `connected to ${supabaseConfig.urlHost}`
-            : "missing local environment variables"}
         </p>
       </section>
     </main>
