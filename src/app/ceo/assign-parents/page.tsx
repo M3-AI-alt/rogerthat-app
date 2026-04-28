@@ -1,6 +1,7 @@
 "use client";
 
 import { AppShell } from "@/components/layout/AppShell";
+import { PageNav } from "@/components/layout/PageNav";
 import {
   assignParentToClass,
   getClassGroups,
@@ -10,6 +11,7 @@ import {
   type ParentClassAssignment,
 } from "@/lib/classes";
 import type { UserProfile } from "@/lib/profile";
+import { ROUTES } from "@/lib/routes";
 import { supabase } from "@/lib/supabase/client";
 import { type FormEvent, type ReactElement, useEffect, useState } from "react";
 
@@ -122,6 +124,7 @@ export default function CeoAssignParentsPage(): ReactElement {
 
   return (
     <AppShell>
+      <PageNav dashboardHref={ROUTES.ceoDashboard} />
       <section>
         <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">
           CEO / Owner

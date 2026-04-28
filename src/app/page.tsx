@@ -9,7 +9,7 @@ const notifications = [
     time: "9:30 AM",
     icon: "↗",
     color: "bg-emerald-100 text-emerald-600",
-    className: "left-[5%] top-[28%] md:left-[4%] md:top-[10%]",
+    className: "left-4 top-24 lg:left-0 lg:top-16",
     delay: "animation-delay-0",
     driftX: "7px",
     driftY: "-8px",
@@ -18,8 +18,8 @@ const notifications = [
     title: "Parent Read",
     time: "10:15 AM",
     icon: "✉",
-    color: "bg-violet-100 text-violet-600",
-    className: "right-[4%] top-[42%] md:right-[4%] md:top-[43%]",
+    color: "bg-blue-100 text-blue-700",
+    className: "right-3 top-[42%] lg:-right-2 lg:top-[40%]",
     delay: "animation-delay-200",
     driftX: "-6px",
     driftY: "7px",
@@ -29,43 +29,65 @@ const notifications = [
     time: "11:45 AM",
     icon: "★",
     color: "bg-amber-100 text-amber-500",
-    className: "left-[9%] top-[58%] md:left-[5%] md:top-auto md:bottom-[4%]",
+    className: "bottom-10 left-8 lg:-bottom-2 lg:left-12",
     delay: "animation-delay-400",
     driftX: "5px",
     driftY: "-6px",
   },
 ] as const;
 
-const valuePreviews = [
-  "See today's report instantly",
-  "Get teacher feedback in real-time",
-  "Track your child's progress daily",
+const entryOptions = [
+  {
+    title: "Parent access request",
+    description: "Parents can request access and wait for class assignment.",
+    href: ROUTES.signup,
+    action: "Request access",
+  },
+  {
+    title: "Teacher account",
+    description: "Teacher accounts are created by school administration.",
+    href: ROUTES.login,
+    action: "Log in",
+  },
+  {
+    title: "Director account",
+    description: "Director accounts are created by school administration.",
+    href: ROUTES.login,
+    action: "Log in",
+  },
+  {
+    title: "CEO login",
+    description: "CEO account signs in with school-managed credentials.",
+    href: ROUTES.login,
+    action: "Log in",
+  },
 ] as const;
 
-const roles = ["Parent", "Teacher", "Director"] as const;
-
-const trustItems = [
-  "Your child's data is protected",
-  "CEO supervises all communication",
-  "No hidden private messages",
+const valuePreviews = [
+  "Daily reports arrive in one supervised place.",
+  "Parents only see their assigned classes.",
+  "CEO and Directors stay visible in communication.",
 ] as const;
 
 function BrandLockup(): ReactElement {
   return (
-    <Link className="flex items-center gap-4" href="/">
+    <Link
+      className="group flex items-center gap-3 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-500/30"
+      href="/"
+    >
       <Image
         alt="Ben Oxford Hub logo"
-        className="h-20 w-20 rounded-full object-contain md:h-20 md:w-20"
-        height={80}
+        className="h-12 w-12 rounded-full object-contain shadow-sm transition duration-200 group-hover:scale-105 md:h-14 md:w-14"
+        height={56}
         priority
         src="/ben-oxford-logo.png"
-        width={80}
+        width={56}
       />
       <span>
-        <span className="block text-4xl font-bold leading-none tracking-normal text-[#071b45] md:text-4xl">
+        <span className="block text-2xl font-bold leading-none tracking-normal text-[#071b45] md:text-3xl">
           RogerThat
         </span>
-        <span className="mt-2 block text-lg font-medium text-[#14285c] md:text-base">
+        <span className="mt-1 block text-xs font-medium tracking-wide text-[#35517f] md:text-sm">
           by Ben Oxford Hub
         </span>
       </span>
@@ -85,21 +107,23 @@ function NotificationCard({
 
   return (
     <div
-      className={`absolute z-20 flex w-[min(18rem,80vw)] animate-float-card items-center gap-3 rounded-3xl bg-white/95 p-4 text-slate-950 shadow-2xl shadow-slate-900/10 backdrop-blur md:w-72 ${notification.className} ${notification.delay}`}
+      className={`absolute z-20 flex w-[min(18rem,82vw)] animate-float-card items-center gap-3 rounded-2xl bg-white/95 p-4 text-slate-950 shadow-2xl shadow-slate-900/15 ring-1 ring-slate-200/80 backdrop-blur ${notification.className} ${notification.delay}`}
       style={animationStyle}
     >
       <div
-        className={`animate-icon-breathe flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-xl font-bold ${notification.color}`}
+        className={`animate-icon-breathe flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-xl font-bold ${notification.color}`}
       >
         {notification.icon}
       </div>
-      <div>
-        <p className="text-base font-bold leading-5">{notification.title}</p>
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-base font-bold leading-5">
+          {notification.title}
+        </p>
         <p className="mt-1 text-sm font-medium text-slate-500">
           {notification.time}
         </p>
       </div>
-      <div className="ml-2 flex h-6 w-6 animate-check-pop items-center justify-center rounded-full bg-blue-600 text-sm font-bold text-white">
+      <div className="flex h-7 w-7 animate-check-pop items-center justify-center rounded-full bg-blue-700 text-sm font-bold text-white">
         ✓
       </div>
     </div>
@@ -108,119 +132,132 @@ function NotificationCard({
 
 export default function Home(): ReactElement {
   return (
-    <main className="min-h-screen bg-white pb-28 text-[#071126] md:pb-0">
-      <section className="relative mx-auto hidden h-screen w-full max-w-[1536px] overflow-hidden bg-white md:block">
-        <Image
-          alt="RogerThat by Ben Oxford Hub desktop SaaS landing page"
-          className="absolute inset-0 h-full w-full object-contain"
-          fill
-          priority
-          sizes="100vw"
-          src="/rogerthat-saas-main-page.png"
-        />
+    <main className="min-h-screen bg-[#f5f8ff] text-[#071126]">
+      <header className="mx-auto flex w-full max-w-7xl items-center justify-between px-5 py-5 md:px-8">
+        <BrandLockup />
+        <nav className="flex items-center gap-2">
+          <Link
+            className="hidden min-h-11 items-center rounded-lg px-4 text-sm font-semibold text-slate-700 transition duration-200 hover:bg-white hover:text-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-500/30 sm:inline-flex"
+            href={ROUTES.signup}
+          >
+            Create account
+          </Link>
+          <Link
+            className="inline-flex min-h-11 items-center rounded-lg bg-[#071b45] px-5 text-sm font-semibold text-white shadow-lg shadow-blue-950/15 transition duration-200 hover:-translate-y-0.5 hover:scale-[1.02] hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-500/30 active:scale-[0.98]"
+            href={ROUTES.login}
+          >
+            Login
+          </Link>
+        </nav>
+      </header>
 
-        <Link
-          aria-label="Login"
-          className="absolute right-[3.2%] top-[4%] h-[6.2%] w-[8%] rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-500/40"
-          href={ROUTES.login}
-        />
-        <Link
-          aria-label="Get Started"
-          className="absolute bottom-[13.7%] left-[3.4%] h-[6.3%] w-[19.9%] rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-500/40"
-          href={ROUTES.login}
-        />
-      </section>
+      <section className="mx-auto grid w-full max-w-7xl gap-10 px-5 pb-12 pt-6 md:grid-cols-[1fr_0.92fr] md:px-8 md:pb-20 md:pt-10">
+        <div className="flex flex-col justify-center">
+          <p className="text-sm font-bold uppercase tracking-wide text-blue-700">
+            RogerThat by Ben Oxford Hub
+          </p>
+          <h1 className="mt-5 max-w-3xl text-5xl font-black leading-[0.95] tracking-normal text-[#061636] md:text-7xl">
+            Connect instantly.
+            <span className="block text-blue-700">Understand effortlessly.</span>
+          </h1>
+          <p className="mt-6 max-w-xl text-lg leading-8 text-slate-700 md:text-xl">
+            A supervised communication space for teachers and parents, built
+            around class reports, safe chats, and clear school oversight.
+          </p>
 
-      <section className="mx-auto min-h-screen w-full max-w-md bg-slate-950 text-white md:hidden">
-        <div className="relative min-h-[760px] overflow-hidden">
-          <div className="absolute inset-0">
-            <Image
-              alt="Asian mother using RogerThat on a smartphone"
-              className="h-full w-full object-cover"
-              fill
-              priority
-              sizes="100vw"
-              src="/person-asian-mother.png"
-            />
-            <div className="absolute inset-0 bg-gradient-to-b from-white/40 via-transparent to-slate-950" />
-            <div className="absolute inset-x-0 bottom-0 h-[46%] bg-gradient-to-t from-slate-950 via-slate-950/95 to-transparent" />
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <Link
+              className="inline-flex min-h-14 items-center justify-center rounded-lg bg-blue-700 px-6 text-base font-bold text-white shadow-xl shadow-blue-900/20 transition duration-200 hover:-translate-y-0.5 hover:scale-[1.02] hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-500/30 active:scale-[0.98]"
+              href={ROUTES.login}
+            >
+              Get Started
+            </Link>
+            <Link
+              className="inline-flex min-h-14 items-center justify-center rounded-lg border border-slate-300 bg-white px-6 text-base font-bold text-slate-950 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:scale-[1.02] hover:border-blue-200 hover:text-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-500/30 active:scale-[0.98]"
+              href={ROUTES.signup}
+            >
+              Create account
+            </Link>
           </div>
 
-          <div className="relative z-10 px-6 pt-7">
-            <BrandLockup />
-          </div>
-
-          {notifications.map((notification) => (
-            <NotificationCard key={notification.title} notification={notification} />
-          ))}
-
-          <div className="relative z-10 flex min-h-[760px] flex-col justify-end px-6 pb-10 text-center">
-            <h1 className="text-6xl font-extrabold leading-[0.95] tracking-normal">
-              Report smarter,
-              <span className="block text-blue-500">not harder</span>
-            </h1>
-            <div className="mx-auto mt-3 h-2 w-36 rounded-full bg-amber-400" />
-            <p className="mx-auto mt-6 max-w-xs text-2xl font-medium leading-9 text-slate-200">
-              Stay connected to your child&apos;s learning every day
-            </p>
+          <div className="mt-8 grid gap-3 sm:grid-cols-3">
+            {valuePreviews.map((item) => (
+              <div
+                className="rounded-lg border border-white bg-white/90 p-4 shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-lg"
+                key={item}
+              >
+                <p className="text-sm font-semibold leading-6 text-slate-700">
+                  {item}
+                </p>
+              </div>
+            ))}
           </div>
         </div>
 
-        <section className="grid gap-8 px-6 py-8">
-          <div className="grid gap-3">
-            <p className="text-sm font-semibold uppercase tracking-wide text-blue-300">
-              Why parents use RogerThat
-            </p>
-            {valuePreviews.map((item) => (
-              <div
-                className="rounded-2xl border border-white/10 bg-white/10 p-4 shadow-lg"
-                key={item}
-              >
-                <p className="text-lg font-semibold leading-7">{item}</p>
+        <div className="relative min-h-[620px] overflow-hidden rounded-[2rem] border border-white bg-[#071b45] p-4 shadow-2xl shadow-blue-950/20">
+          <div className="grid h-full grid-cols-2 gap-3">
+            <div className="relative overflow-hidden rounded-3xl">
+              <Image
+                alt="Parent using RogerThat"
+                className="h-full w-full object-cover"
+                fill
+                priority
+                sizes="(max-width: 768px) 50vw, 320px"
+                src="/person-parent.png"
+              />
+            </div>
+            <div className="grid gap-3">
+              <div className="relative overflow-hidden rounded-3xl">
+                <Image
+                  alt="Teacher using RogerThat"
+                  className="h-full w-full object-cover"
+                  fill
+                  priority
+                  sizes="(max-width: 768px) 50vw, 320px"
+                  src="/person-teacher.png"
+                />
               </div>
-            ))}
-          </div>
-
-          <div className="grid gap-3">
-            <p className="text-sm font-semibold uppercase tracking-wide text-blue-300">
-              Choose your role
-            </p>
-            {roles.map((role) => (
-              <Link
-                className="flex min-h-14 items-center justify-between rounded-2xl bg-white px-5 text-lg font-bold text-slate-950"
-                href={ROUTES.login}
-                key={role}
-              >
-                {role}
-                <span aria-hidden="true">→</span>
-              </Link>
-            ))}
-          </div>
-
-          <div className="grid gap-3">
-            <p className="text-sm font-semibold uppercase tracking-wide text-blue-300">
-              Trust and supervision
-            </p>
-            {trustItems.map((item) => (
-              <div
-                className="rounded-2xl border border-white/10 bg-white/10 p-4"
-                key={item}
-              >
-                <p className="text-base font-semibold leading-7">{item}</p>
+              <div className="relative overflow-hidden rounded-3xl">
+                <Image
+                  alt="School director using RogerThat"
+                  className="h-full w-full object-cover"
+                  fill
+                  priority
+                  sizes="(max-width: 768px) 50vw, 320px"
+                  src="/person-professional-woman.png"
+                />
               </div>
-            ))}
+            </div>
           </div>
-        </section>
+          <div className="absolute inset-0 bg-gradient-to-t from-[#071b45]/70 via-transparent to-white/10" />
+          {notifications.map((notification) => (
+            <NotificationCard
+              key={notification.title}
+              notification={notification}
+            />
+          ))}
+        </div>
       </section>
 
-      <div className="fixed inset-x-0 bottom-0 z-50 mx-auto w-full max-w-md bg-slate-950/95 px-5 py-4 backdrop-blur md:hidden">
-        <Link
-          className="flex min-h-16 items-center justify-center rounded-full bg-blue-600 px-6 text-xl font-bold text-white shadow-2xl shadow-blue-950/40"
-          href={ROUTES.login}
-        >
-          Continue with Phone
-        </Link>
-      </div>
+      <section className="mx-auto grid w-full max-w-7xl gap-4 px-5 pb-20 md:grid-cols-4 md:px-8">
+        {entryOptions.map((option) => (
+          <Link
+            className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm transition duration-200 hover:-translate-y-1 hover:border-blue-200 hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-blue-500/30 active:scale-[0.99]"
+            href={option.href}
+            key={option.title}
+          >
+            <p className="text-base font-bold text-slate-950">
+              {option.title}
+            </p>
+            <p className="mt-2 min-h-16 text-sm leading-6 text-slate-600">
+              {option.description}
+            </p>
+            <span className="mt-4 inline-flex text-sm font-bold text-blue-700">
+              {option.action} →
+            </span>
+          </Link>
+        ))}
+      </section>
     </main>
   );
 }

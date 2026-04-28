@@ -1,9 +1,9 @@
 "use client";
 
-import { AppShell } from "@/components/layout/AppShell";
 import { ROUTES } from "@/lib/routes";
 import { getFriendlyAuthError } from "@/lib/supabase/auth-errors";
 import { supabase, supabaseConfig } from "@/lib/supabase/client";
+import Image from "next/image";
 import Link from "next/link";
 import { type FormEvent, type ReactElement, useState } from "react";
 
@@ -63,19 +63,17 @@ export default function SignupPage(): ReactElement {
     }
 
     if (data.user && data.session) {
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .upsert(
-          {
-            id: data.user.id,
-            full_name: parentName,
-            email: email.trim(),
-            phone,
-            role: "PARENT",
-            approval_status: "PENDING",
-          },
-          { ignoreDuplicates: true, onConflict: "id" }
-        );
+      const { error: profileError } = await supabase.from("profiles").upsert(
+        {
+          id: data.user.id,
+          full_name: parentName,
+          email: email.trim(),
+          phone,
+          role: "PARENT",
+          approval_status: "PENDING",
+        },
+        { ignoreDuplicates: true, onConflict: "id" }
+      );
 
       if (profileError) {
         setErrorMessage(
@@ -104,56 +102,54 @@ export default function SignupPage(): ReactElement {
   }
 
   return (
-    <AppShell>
-      <section className="mx-auto max-w-md">
-        <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">
-          RogerThat
-        </p>
-        <h1 className="mt-3 text-3xl font-semibold text-slate-950">Sign up</h1>
-        <p className="mt-3 text-base leading-7 text-slate-600">
-          Parent signup creates an active parent account. The CEO assigns class
-          access later.
-        </p>
-        <p className="mt-3 text-sm leading-6 text-slate-600">
-          Use a real email inbox, because Supabase will send a confirmation
-          email before login is allowed.
-        </p>
-        <p className="mt-3 rounded-lg border border-slate-200 bg-white p-3 text-xs leading-5 text-slate-500">
-          Supabase config:{" "}
-          {supabaseConfig.hasUrl && supabaseConfig.hasAnonKey
-            ? `connected to ${supabaseConfig.urlHost}`
-            : "missing local environment variables"}
-        </p>
+    <main className="min-h-screen bg-[#f5f8ff] px-5 py-5 text-slate-950">
+      <section className="mx-auto w-full max-w-md">
+        <div className="flex items-center justify-between">
+          <Link
+            aria-label="Go back to login"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-xl font-semibold text-slate-800 shadow-sm transition duration-200 hover:-translate-x-0.5 hover:bg-blue-50 hover:text-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-500/30 active:scale-95"
+            href={ROUTES.login}
+          >
+            ←
+          </Link>
+          <Link
+            className="text-sm font-semibold text-blue-700 transition hover:text-blue-900 focus:outline-none focus:ring-4 focus:ring-blue-500/30"
+            href="/"
+          >
+            Home
+          </Link>
+        </div>
 
-        <div className="mt-8 grid gap-3 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="text-base font-semibold text-slate-950">
-            Placeholder signup methods
+        <div className="mt-8 rounded-3xl bg-[#071b45] p-6 text-white shadow-2xl shadow-blue-950/20">
+          <Image
+            alt="Ben Oxford Hub logo"
+            className="h-14 w-14 rounded-full bg-white object-contain shadow-sm"
+            height={56}
+            priority
+            src="/ben-oxford-logo.png"
+            width={56}
+          />
+          <p className="mt-6 text-sm font-semibold uppercase tracking-wide text-blue-200">
+            RogerThat
           </p>
-          <button
-            className="min-h-12 cursor-not-allowed rounded-lg border border-slate-300 bg-white px-5 py-3 text-base font-semibold text-slate-500"
-            disabled
-            type="button"
-          >
-            Continue with Google later
-          </button>
-          <button
-            className="min-h-12 cursor-not-allowed rounded-lg border border-slate-300 bg-white px-5 py-3 text-base font-semibold text-slate-500"
-            disabled
-            type="button"
-          >
-            Sign up with phone OTP later
-          </button>
+          <h1 className="mt-3 text-3xl font-bold tracking-normal">
+            Parent Access Request
+          </h1>
+          <p className="mt-3 text-sm leading-6 text-blue-100">
+            Parent signup only. Teacher, Director, and CEO accounts are created
+            by school administration.
+          </p>
         </div>
 
         <form
-          className="mt-4 grid gap-4 rounded-lg border border-slate-200 bg-white p-5 shadow-sm"
+          className="mt-5 grid gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
           onSubmit={handleSignup}
         >
-          <label className="grid gap-2 text-sm font-medium text-slate-700">
+          <label className="grid gap-2 text-sm font-semibold text-slate-700">
             Parent full name
             <input
               autoComplete="name"
-              className="min-h-12 rounded-lg border border-slate-300 px-4 text-base text-slate-950"
+              className="min-h-14 rounded-lg border border-slate-300 px-4 text-base text-slate-950 transition focus:border-blue-600 focus:outline-none focus:ring-4 focus:ring-blue-500/20"
               onChange={(event) => setParentName(event.target.value)}
               placeholder="Parent full name"
               required
@@ -161,22 +157,22 @@ export default function SignupPage(): ReactElement {
               value={parentName}
             />
           </label>
-          <label className="grid gap-2 text-sm font-medium text-slate-700">
+          <label className="grid gap-2 text-sm font-semibold text-slate-700">
             Phone number
             <input
               autoComplete="tel"
-              className="min-h-12 rounded-lg border border-slate-300 px-4 text-base text-slate-950"
+              className="min-h-14 rounded-lg border border-slate-300 px-4 text-base text-slate-950 transition focus:border-blue-600 focus:outline-none focus:ring-4 focus:ring-blue-500/20"
               onChange={(event) => setPhone(event.target.value)}
               placeholder="+84..."
               type="tel"
               value={phone}
             />
           </label>
-          <label className="grid gap-2 text-sm font-medium text-slate-700">
+          <label className="grid gap-2 text-sm font-semibold text-slate-700">
             Email
             <input
               autoComplete="email"
-              className="min-h-12 rounded-lg border border-slate-300 px-4 text-base text-slate-950"
+              className="min-h-14 rounded-lg border border-slate-300 px-4 text-base text-slate-950 transition focus:border-blue-600 focus:outline-none focus:ring-4 focus:ring-blue-500/20"
               onChange={(event) => setEmail(event.target.value)}
               placeholder="name@example.com"
               required
@@ -184,11 +180,11 @@ export default function SignupPage(): ReactElement {
               value={email}
             />
           </label>
-          <label className="grid gap-2 text-sm font-medium text-slate-700">
+          <label className="grid gap-2 text-sm font-semibold text-slate-700">
             Password
             <input
               autoComplete="new-password"
-              className="min-h-12 rounded-lg border border-slate-300 px-4 text-base text-slate-950"
+              className="min-h-14 rounded-lg border border-slate-300 px-4 text-base text-slate-950 transition focus:border-blue-600 focus:outline-none focus:ring-4 focus:ring-blue-500/20"
               minLength={6}
               onChange={(event) => setPassword(event.target.value)}
               placeholder="At least 6 characters"
@@ -197,10 +193,10 @@ export default function SignupPage(): ReactElement {
               value={password}
             />
           </label>
-          <label className="grid gap-2 text-sm font-medium text-slate-700">
+          <label className="grid gap-2 text-sm font-semibold text-slate-700">
             Child name
             <input
-              className="min-h-12 rounded-lg border border-slate-300 px-4 text-base text-slate-950"
+              className="min-h-14 rounded-lg border border-slate-300 px-4 text-base text-slate-950 transition focus:border-blue-600 focus:outline-none focus:ring-4 focus:ring-blue-500/20"
               onChange={(event) => setChildName(event.target.value)}
               placeholder="Child name"
               required
@@ -208,10 +204,10 @@ export default function SignupPage(): ReactElement {
               value={childName}
             />
           </label>
-          <label className="grid gap-2 text-sm font-medium text-slate-700">
+          <label className="grid gap-2 text-sm font-semibold text-slate-700">
             Class ID / Class Code
             <input
-              className="min-h-12 rounded-lg border border-slate-300 px-4 text-base text-slate-950"
+              className="min-h-14 rounded-lg border border-slate-300 px-4 text-base text-slate-950 transition focus:border-blue-600 focus:outline-none focus:ring-4 focus:ring-blue-500/20"
               onChange={(event) => setClassCode(event.target.value)}
               placeholder="Class code from CEO"
               type="text"
@@ -237,21 +233,31 @@ export default function SignupPage(): ReactElement {
           ) : null}
 
           <button
-            className="min-h-14 rounded-lg bg-slate-950 px-5 py-4 text-base font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-400"
+            className="min-h-14 rounded-lg bg-blue-700 px-5 text-base font-bold text-white shadow-lg shadow-blue-900/20 transition duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-500/30 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-slate-400"
             disabled={isLoading}
             type="submit"
           >
-            {isLoading ? "Creating request..." : "Send parent access request"}
+            {isLoading ? "Sending request..." : "Send parent access request"}
           </button>
         </form>
 
         <p className="mt-6 text-center text-sm text-slate-600">
           Already have an account?{" "}
-          <Link className="font-semibold text-slate-950" href={ROUTES.login}>
-            Login
+          <Link
+            className="font-semibold text-blue-700 transition hover:text-blue-900 focus:outline-none focus:ring-4 focus:ring-blue-500/30"
+            href={ROUTES.login}
+          >
+            Log in
           </Link>
         </p>
+
+        <p className="mt-5 text-center text-xs leading-5 text-slate-500">
+          Supabase config:{" "}
+          {supabaseConfig.hasUrl && supabaseConfig.hasAnonKey
+            ? `connected to ${supabaseConfig.urlHost}`
+            : "missing local environment variables"}
+        </p>
       </section>
-    </AppShell>
+    </main>
   );
 }

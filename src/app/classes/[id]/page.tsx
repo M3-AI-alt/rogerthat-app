@@ -1,6 +1,7 @@
 "use client";
 
 import { AppShell } from "@/components/layout/AppShell";
+import { PageNav } from "@/components/layout/PageNav";
 import { getClassGroup, type ClassGroup } from "@/lib/classes";
 import { getCurrentUserProfile, type UserProfile } from "@/lib/profile";
 import {
@@ -132,6 +133,7 @@ export default function ClassReportsPage(): ReactElement {
 
   return (
     <AppShell>
+      <PageNav />
       <section>
         <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">
           Class reporting room

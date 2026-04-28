@@ -1,6 +1,7 @@
 "use client";
 
 import { AppShell } from "@/components/layout/AppShell";
+import { PageNav } from "@/components/layout/PageNav";
 import { getMyChats, type Chat } from "@/lib/chats";
 import { supabase } from "@/lib/supabase/client";
 import Link from "next/link";
@@ -103,6 +104,7 @@ export default function ChatsPage(): ReactElement {
 
   return (
     <AppShell>
+      <PageNav />
       <section>
         <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">
           Supervised chats

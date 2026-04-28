@@ -1,7 +1,9 @@
 "use client";
 
 import { AppShell } from "@/components/layout/AppShell";
+import { PageNav } from "@/components/layout/PageNav";
 import type { ApprovalStatus, UserProfile } from "@/lib/profile";
+import { ROUTES } from "@/lib/routes";
 import { supabase } from "@/lib/supabase/client";
 import { type ReactElement, useEffect, useMemo, useState } from "react";
 
@@ -157,6 +159,7 @@ export default function CeoUsersPage(): ReactElement {
 
   return (
     <AppShell>
+      <PageNav dashboardHref={ROUTES.ceoDashboard} />
       <section>
         <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">
           CEO / Owner

@@ -1,6 +1,7 @@
 "use client";
 
 import { AppShell } from "@/components/layout/AppShell";
+import { PageNav } from "@/components/layout/PageNav";
 import {
   getChatById,
   getChatMessages,
@@ -189,6 +190,7 @@ export default function ChatDetailPage(): ReactElement {
 
   return (
     <AppShell>
+      <PageNav dashboardHref="/chats" dashboardLabel="My Chats" />
       <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
         <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">
           Supervised chat room

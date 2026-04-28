@@ -23,7 +23,7 @@ export function LogoutButton(): ReactElement | null {
 
   return (
     <button
-      className="ml-auto min-h-11 rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-950 disabled:cursor-not-allowed disabled:text-slate-500"
+      className="ml-auto min-h-11 rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-950 transition duration-200 hover:-translate-y-0.5 hover:border-blue-200 hover:text-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-500/30 active:scale-[0.98] disabled:cursor-not-allowed disabled:text-slate-500"
       disabled={isLoading}
       onClick={handleLogout}
       type="button"

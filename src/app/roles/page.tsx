@@ -1,5 +1,6 @@
 import { DashboardCard } from "@/components/dashboard/DashboardCard";
 import { AppShell } from "@/components/layout/AppShell";
+import { PageNav } from "@/components/layout/PageNav";
 import type { ReactElement } from "react";
 
 const roleDetails = [
@@ -43,6 +44,7 @@ const roleDetails = [
 export default function RolesPage(): ReactElement {
   return (
     <AppShell>
+      <PageNav />
       <section>
         <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">
           Access planning
