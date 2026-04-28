@@ -131,7 +131,7 @@ export default function CeoAssignTeachersPage(): ReactElement {
           Assign teachers
         </h1>
         <p className="mt-3 text-base leading-7 text-slate-600">
-          Connect teachers to class reporting rooms and class group chats.
+          Add teachers to class rooms.
         </p>
       </section>
 
@@ -207,10 +207,10 @@ export default function CeoAssignTeachersPage(): ReactElement {
             {isLoading ? (
               <p className="text-sm text-slate-600">Loading assignments...</p>
             ) : assignments.length === 0 ? (
-              <EmptyState
-                actionHref={ROUTES.ceoClasses}
-                actionLabel="Create or review classes"
-                description="Assign a teacher after at least one class and one teacher profile exist."
+            <EmptyState
+              actionHref={ROUTES.ceoClasses}
+              actionLabel="Create or review classes"
+                description="Assign a teacher after at least one class room and one teacher profile exist."
                 title="No teachers assigned yet"
               />
             ) : (

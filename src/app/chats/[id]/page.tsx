@@ -10,6 +10,7 @@ import {
   type Chat,
   type ChatMember,
   type ChatMessage,
+  type MessageType,
 } from "@/lib/chats";
 import { getCurrentUserProfile, type UserProfile } from "@/lib/profile";
 import { supabase } from "@/lib/supabase/client";
@@ -41,7 +42,15 @@ function getSenderName(message: ChatMessage): string {
 }
 
 function getChatTitle(chat: Chat | null): string {
-  return chat?.title?.trim() || "Supervised chat";
+  if (chat?.chat_type === "CLASS_GROUP_CHAT" && chat.class_groups) {
+    return `${chat.class_groups.code} Class Room`;
+  }
+
+  if (chat?.title?.trim()) {
+    return chat.title.trim();
+  }
+
+  return chat?.chat_type === "CLASS_GROUP_CHAT" ? "Class Room" : "Private Chat";
 }
 
 function getRoleLabel(role: string | null | undefined): string {
@@ -54,14 +63,14 @@ function getRoleLabel(role: string | null | undefined): string {
 
 function getChatTypeLabel(chat: Chat | null): string {
   if (chat?.chat_type === "CLASS_GROUP_CHAT") {
-    return "Class group";
+    return "Class Room";
   }
 
   if (chat?.chat_type === "SUPERVISED_PRIVATE_CHAT") {
-    return "Private supervised";
+    return "Private Chat";
   }
 
-  return "Supervised";
+  return "Messages";
 }
 
 function formatTime(value: string): string {
@@ -106,6 +115,7 @@ export default function ChatDetailPage(): ReactElement {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [content, setContent] = useState("");
+  const [messageType, setMessageType] = useState<MessageType>("CHAT");
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
@@ -150,13 +160,18 @@ export default function ChatDetailPage(): ReactElement {
     setIsSending(true);
 
     try {
-      const message = await sendMessage(chatId, trimmedContent);
+      const messageContent =
+        messageType === "REPORT"
+          ? `[REPORT]\n${trimmedContent}`
+          : trimmedContent;
+      const message = await sendMessage(chatId, messageContent);
       setMessages((currentMessages) =>
         currentMessages.some((currentMessage) => currentMessage.id === message.id)
           ? currentMessages
           : [...currentMessages, message]
       );
       setContent("");
+      setMessageType("CHAT");
     } catch {
       setErrorMessage("Could not send this message. Please try again.");
     } finally {
@@ -230,7 +245,7 @@ export default function ChatDetailPage(): ReactElement {
 
   return (
     <AppShell>
-      <PageNav dashboardHref="/chats" dashboardLabel="My Chats" />
+      <PageNav dashboardHref="/chats" dashboardLabel="Rooms & Chats" />
       <section className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
         <div className="border-b border-slate-200 bg-slate-950 px-4 py-4 text-white sm:px-5">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -247,14 +262,9 @@ export default function ChatDetailPage(): ReactElement {
                 </p>
               ) : null}
             </div>
-            <div className="flex flex-wrap gap-2 text-xs font-semibold">
-              <span className="rounded-full border border-emerald-300/40 bg-emerald-300/15 px-3 py-1 text-emerald-50">
-                CEO supervised
-              </span>
-              <span className="rounded-full border border-blue-300/40 bg-blue-300/15 px-3 py-1 text-blue-50">
-                Director visible
-              </span>
-            </div>
+            <p className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-sm font-semibold text-white">
+              {(chat?.chat_members ?? []).length} participants
+            </p>
           </div>
         </div>
       </section>
@@ -271,7 +281,7 @@ export default function ChatDetailPage(): ReactElement {
             Participants
           </p>
           <p className="mt-1 text-sm text-slate-600">
-            Everyone listed here can see this conversation.
+            Members of this room.
           </p>
           <div className="mt-5 grid gap-5">
             <ParticipantGroup members={groupedMembers.ceos} title="CEO" />
@@ -296,13 +306,12 @@ export default function ChatDetailPage(): ReactElement {
               <p className="text-base font-semibold text-slate-950">
                 Messages
               </p>
-              <span className="inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800">
-                {newMessageCount} new
-              </span>
+              {newMessageCount > 0 ? (
+                <span className="inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800">
+                  {newMessageCount} new
+                </span>
+              ) : null}
             </div>
-            <p className="mt-1 text-sm text-slate-500">
-              Messages update live while this page is open.
-            </p>
             {showNewMessageHint ? (
               <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm font-semibold text-amber-900">
                 New message received.
@@ -315,12 +324,16 @@ export default function ChatDetailPage(): ReactElement {
               <p className="text-sm text-slate-600">Loading messages...</p>
             ) : messages.length === 0 ? (
               <EmptyState
-                description="Start with a clear supervised message. CEO and Directors can see this conversation."
+                description="Send the first message or report in this room."
                 title="No messages yet"
               />
             ) : (
               messages.map((message) => {
                 const isOwnMessage = message.sender_id === profile?.id;
+                const isReport = message.content.startsWith("[REPORT]\n");
+                const displayContent = isReport
+                  ? message.content.replace(/^\[REPORT\]\n/, "")
+                  : message.content;
 
                 return (
                   <article
@@ -338,12 +351,17 @@ export default function ChatDetailPage(): ReactElement {
                         <p className="text-sm font-semibold">
                           {getSenderName(message)}
                         </p>
+                        {isReport ? (
+                          <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[11px] font-semibold uppercase text-blue-800">
+                            Report
+                          </span>
+                        ) : null}
                         <span className="rounded-full bg-black/5 px-2 py-0.5 text-[11px] font-semibold uppercase text-slate-600">
                           {getRoleLabel(message.profiles?.role)}
                         </span>
                       </div>
                       <p className="mt-2 whitespace-pre-wrap text-[15px] leading-6">
-                        {message.content}
+                        {displayContent}
                       </p>
                       <p className="mt-2 text-right text-[11px] font-medium text-slate-500">
                         {formatTime(message.created_at)}
@@ -359,13 +377,41 @@ export default function ChatDetailPage(): ReactElement {
             className="sticky bottom-0 grid gap-3 border-t border-slate-200 bg-white p-3 sm:p-4"
             onSubmit={handleSendMessage}
           >
+            <div className="flex flex-wrap gap-2">
+              <button
+                className={`min-h-10 rounded-lg px-4 text-sm font-semibold ${
+                  messageType === "CHAT"
+                    ? "bg-slate-950 text-white"
+                    : "border border-slate-200 bg-white text-slate-700"
+                }`}
+                onClick={() => setMessageType("CHAT")}
+                type="button"
+              >
+                Message
+              </button>
+              <button
+                className={`min-h-10 rounded-lg px-4 text-sm font-semibold ${
+                  messageType === "REPORT"
+                    ? "bg-blue-700 text-white"
+                    : "border border-slate-200 bg-white text-slate-700"
+                }`}
+                onClick={() => setMessageType("REPORT")}
+                type="button"
+              >
+                Report
+              </button>
+            </div>
             <label className="grid gap-2 text-sm font-medium text-slate-700">
-              Message
+              {messageType === "REPORT" ? "Report" : "Message"}
               <textarea
                 className="min-h-16 resize-y rounded-lg border border-slate-300 bg-slate-50 p-4 text-base text-slate-950"
                 onKeyDown={handleComposerKeyDown}
                 onChange={(event) => setContent(event.target.value)}
-                placeholder="Write a supervised message. Press Enter to send, Shift+Enter for a new line."
+                placeholder={
+                  messageType === "REPORT"
+                    ? "Write a class report..."
+                    : "Write a message. Press Enter to send, Shift+Enter for a new line."
+                }
                 value={content}
               />
             </label>
@@ -374,7 +420,11 @@ export default function ChatDetailPage(): ReactElement {
               disabled={isSending || !content.trim()}
               type="submit"
             >
-              {isSending ? "Sending..." : "Send message"}
+              {isSending
+                ? "Sending..."
+                : messageType === "REPORT"
+                  ? "Send Report"
+                  : "Send"}
             </button>
           </form>
         </div>

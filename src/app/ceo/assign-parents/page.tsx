@@ -134,7 +134,7 @@ export default function CeoAssignParentsPage(): ReactElement {
           Assign parents
         </h1>
         <p className="mt-3 text-base leading-7 text-slate-600">
-          Connect parents to class reports and supervised class group chats.
+          Add parents to class rooms.
         </p>
       </section>
 
@@ -220,11 +220,11 @@ export default function CeoAssignParentsPage(): ReactElement {
             {isLoading ? (
               <p className="text-sm text-slate-600">Loading assignments...</p>
             ) : assignments.length === 0 ? (
-              <EmptyState
-                actionHref={ROUTES.ceoClasses}
-                actionLabel="Create or review classes"
-                description="Assign a parent after at least one class and one parent profile exist."
-                title="No parents assigned yet"
+            <EmptyState
+              actionHref={ROUTES.ceoClasses}
+              actionLabel="Create or review classes"
+              description="Assign a parent after at least one class room and one parent profile exist."
+              title="No parents assigned yet"
               />
             ) : (
               assignments.map((assignment) => (

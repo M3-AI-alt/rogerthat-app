@@ -21,7 +21,7 @@ export default function DirectorDashboardPage(): ReactElement {
           Director dashboard
         </h1>
         <p className="mt-3 text-base leading-7 text-slate-600">
-          Supervision overview for reports, chats, classes, and teachers.
+          Overview for class rooms, private chats, reports, and teachers.
         </p>
       </section>
 
@@ -30,7 +30,7 @@ export default function DirectorDashboardPage(): ReactElement {
           className="inline-flex min-h-12 items-center justify-center rounded-lg bg-slate-950 px-5 text-base font-semibold text-white"
           href="/chats"
         >
-          My Chats
+          Rooms & Chats
         </Link>
         {mockClasses.length === 0 && mockChats.length === 0 ? (
           <EmptyState
@@ -38,22 +38,22 @@ export default function DirectorDashboardPage(): ReactElement {
             title="No supervision tasks yet"
           />
         ) : null}
-        <DashboardCard label="Classes supervised" value={mockClasses.length}>
+        <DashboardCard label="Class Rooms" value={mockClasses.length}>
           {mockClasses.length === 0 ? (
             <EmptyState
-              description="Supervised classes will appear after CEO setup."
-              title="No classes yet"
+              description="Class rooms will appear after CEO setup."
+              title="No class rooms yet"
             />
           ) : null}
         </DashboardCard>
         <DashboardCard label="Reports to review" value={mockReports.length} />
-        <DashboardCard label="Active chats" value={mockChats.length}>
+        <DashboardCard label="Rooms & Chats" value={mockChats.length}>
           {mockChats.length === 0 ? (
             <EmptyState
               actionHref="/chats"
               actionLabel="Open chats"
-              description="Supervised conversations will appear here."
-              title="No conversations yet"
+              description="Class rooms and private chats will appear here."
+              title="No rooms or chats yet"
             />
           ) : null}
         </DashboardCard>

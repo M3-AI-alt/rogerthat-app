@@ -144,21 +144,20 @@ export default function CeoDashboardPage(): ReactElement {
           CEO dashboard
         </h1>
         <p className="mt-3 text-base leading-7 text-slate-600">
-          Start with one class, connect a teacher and parent, open the class
-          chat, then send the first daily report.
+          Manage class rooms, users, assignments, and private chats.
         </p>
         <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <Link
             className="inline-flex min-h-12 items-center justify-center rounded-lg bg-slate-950 px-5 text-base font-semibold text-white"
-            href={ROUTES.ceoUsers}
+            href={ROUTES.ceoClasses}
           >
-            Manage Users
+            Rooms
           </Link>
           <Link
             className="inline-flex min-h-12 items-center justify-center rounded-lg border border-slate-300 bg-white px-5 text-base font-semibold text-slate-950"
-            href={ROUTES.ceoClasses}
+            href={ROUTES.ceoUsers}
           >
-            Manage Classes
+            Users
           </Link>
           <Link
             className="inline-flex min-h-12 items-center justify-center rounded-lg border border-slate-300 bg-white px-5 text-base font-semibold text-slate-950"
@@ -176,13 +175,7 @@ export default function CeoDashboardPage(): ReactElement {
             className="inline-flex min-h-12 items-center justify-center rounded-lg border border-slate-300 bg-white px-5 text-base font-semibold text-slate-950"
             href={ROUTES.ceoChats}
           >
-            Manage Chats
-          </Link>
-          <Link
-            className="inline-flex min-h-12 items-center justify-center rounded-lg border border-blue-200 bg-blue-50 px-5 text-base font-semibold text-blue-800"
-            href="/demo-guide"
-          >
-            Demo Guide
+            Private Chats
           </Link>
         </div>
       </section>
@@ -195,10 +188,10 @@ export default function CeoDashboardPage(): ReactElement {
           </h2>
           <div className="mt-5 grid gap-3">
             <SetupChecklistItem
-              description="Create the class reporting room."
+              description="Create the class room."
               href={ROUTES.ceoClasses}
               isDone={classes.length > 0}
-              title="Create a class"
+              title="Create a class room"
             />
             <SetupChecklistItem
               description="Connect a teacher to the class."
@@ -213,10 +206,10 @@ export default function CeoDashboardPage(): ReactElement {
               title="Assign parent to class"
             />
             <SetupChecklistItem
-              description="Open one supervised group chat for the class."
+              description="Open the message room for the class."
               href={ROUTES.ceoChats}
               isDone={chats.some((chat) => chat.chat_type === "CLASS_GROUP_CHAT")}
-              title="Create/open class group chat"
+              title="Create/open class room"
             />
             <SetupChecklistItem
               description="Teacher opens the class and sends the first update."
@@ -231,8 +224,8 @@ export default function CeoDashboardPage(): ReactElement {
           <EmptyState
             actionHref={ROUTES.ceoClasses}
             actionLabel="Create your first class"
-            description="Classes unlock parent assignments, class reports, and supervised conversations."
-            title="Create your first class"
+            description="Class rooms unlock parent assignments, teacher reports, and messages."
+            title="Create your first class room"
           />
         ) : null}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
@@ -240,20 +233,20 @@ export default function CeoDashboardPage(): ReactElement {
           <DashboardCard label="Teachers" value={teacherCount} />
           <DashboardCard label="Parents" value={parentCount} />
           <DashboardCard label="Classes" value={classes.length} />
-          <DashboardCard label="Supervised Chats" value={chats.length} />
+          <DashboardCard label="Rooms & Chats" value={chats.length} />
         </div>
         <DashboardCard label="Reports" value={reportCount}>
-          Daily report count across class reporting rooms.
+          Report messages sent across class rooms.
         </DashboardCard>
-        <DashboardCard label="Open class reporting rooms">
+        <DashboardCard label="Open class rooms">
           {isLoadingClasses ? (
             <p>Loading classes...</p>
           ) : classes.length === 0 ? (
             <EmptyState
               actionHref={ROUTES.ceoClasses}
               actionLabel="Manage classes"
-              description="Create a class such as BOH-A1 to start the demo flow."
-              title="No classes yet"
+              description="Create a class room such as BOH-A1 to start the demo flow."
+              title="No class rooms yet"
             />
           ) : (
             classes.map((classGroup) => (
@@ -271,7 +264,7 @@ export default function CeoDashboardPage(): ReactElement {
                   className="inline-flex min-h-10 items-center rounded-lg border border-blue-200 bg-blue-50 px-4 text-sm font-semibold text-blue-800"
                   href={ROUTES.ceoChats}
                 >
-                  Open class chat
+                  Open room
                 </Link>
               </div>
             ))

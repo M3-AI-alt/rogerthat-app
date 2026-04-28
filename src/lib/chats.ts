@@ -2,6 +2,7 @@ import { supabase } from "@/lib/supabase/client";
 
 export type ChatType = "CLASS_GROUP_CHAT" | "SUPERVISED_PRIVATE_CHAT";
 export type ChatProfileRole = "CEO" | "DIRECTOR" | "TEACHER" | "PARENT";
+export type MessageType = "CHAT" | "REPORT";
 
 export type ChatMemberProfile = {
   id: string;
@@ -340,7 +341,7 @@ export async function createClassGroupChat(classId: string): Promise<Chat> {
       chat_type: "CLASS_GROUP_CHAT",
       class_id: classId,
       created_by: createdBy,
-      title: `${classGroup.code} class group chat`,
+      title: `${classGroup.code} Class Room`,
     })
     .select(chatSelect)
     .single();
@@ -378,7 +379,7 @@ export async function createSupervisedPrivateChat(
   directorIds: string[]
 ): Promise<Chat> {
   if (directorIds.length === 0) {
-    throw new Error("Choose at least one Director for supervised private chat.");
+    throw new Error("Choose at least one Director for this private chat.");
   }
 
   const createdBy = await getCurrentUserId();
@@ -403,7 +404,7 @@ export async function createSupervisedPrivateChat(
       created_by: createdBy,
       parent_id: parentId,
       teacher_id: teacherId,
-      title: `${classGroup.code} supervised private chat`,
+      title: `${classGroup.code} Private Chat`,
     })
     .select(chatSelect)
     .single();

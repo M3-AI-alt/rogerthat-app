@@ -55,7 +55,7 @@ export default function ParentDashboardPage(): ReactElement {
           Parent dashboard
         </h1>
         <p className="mt-3 text-base leading-7 text-slate-600">
-          Mobile-first view for your assigned classes.
+          Your class rooms, private chats, and latest reports.
         </p>
       </section>
 
@@ -64,17 +64,17 @@ export default function ParentDashboardPage(): ReactElement {
           className="inline-flex min-h-12 items-center justify-center rounded-lg bg-slate-950 px-5 text-base font-semibold text-white"
           href="/chats"
         >
-          My Chats
+          My Rooms & Chats
         </Link>
-        <DashboardCard label="Assigned classes" value={assignments.length}>
+        <DashboardCard label="My Class Rooms" value={assignments.length}>
           {isLoading ? (
             <p>Loading assigned classes...</p>
           ) : errorMessage ? (
             <p className="text-red-700">{errorMessage}</p>
           ) : assignments.length === 0 ? (
             <EmptyState
-              description="Your account is active. Waiting for class assignment."
-              title="No classes assigned yet"
+              description="Your account is active. Waiting for school to add you to a class room."
+              title="No class rooms yet"
             />
           ) : (
             <div className="grid gap-3">
@@ -115,11 +115,11 @@ export default function ParentDashboardPage(): ReactElement {
                           className="inline-flex min-h-10 items-center rounded-lg border border-blue-200 bg-blue-50 px-4 text-sm font-semibold text-blue-800"
                           href={`/chats/${classChat.id}`}
                         >
-                          Open chat
+                          Open room
                         </Link>
                       ) : (
                         <span className="inline-flex min-h-10 items-center rounded-lg border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-500">
-                          Chat not created yet
+                          Room not created yet
                         </span>
                       )}
                     </div>
@@ -129,7 +129,7 @@ export default function ParentDashboardPage(): ReactElement {
             </div>
           )}
         </DashboardCard>
-        <DashboardCard label="Reports">
+        <DashboardCard label="Latest Reports">
           <EmptyState
             actionHref={
               assignments.find((assignment) => assignment.class_id)?.class_id
@@ -144,33 +144,36 @@ export default function ParentDashboardPage(): ReactElement {
                 ? "Open reports"
                 : undefined
             }
-            description="Reports will appear after your class is assigned and a teacher sends a daily report."
+            description="Reports will appear after your class room is active and a teacher sends a report."
             title="No reports yet"
           />
         </DashboardCard>
-        <DashboardCard label="Supervised chats">
-          {chats.length === 0 ? (
+        <DashboardCard label="My Private Chats">
+          {chats.filter((chat) => chat.chat_type === "SUPERVISED_PRIVATE_CHAT")
+            .length === 0 ? (
             <EmptyState
               actionHref={assignments.length > 0 ? "/chats" : undefined}
               actionLabel={assignments.length > 0 ? "Open chats" : undefined}
               description={
                 assignments.length > 0
-                  ? "Your supervised class chat will appear here after the CEO opens it."
-                  : "Your account is active. Waiting for class assignment."
+                  ? "Private chats with teachers will appear here."
+                  : "Your account is active. Waiting for school to add you to a class room."
               }
-              title="No conversations yet"
+              title="No private chats yet"
             />
           ) : (
             <div className="grid gap-2">
-              {chats.map((chat) => (
-                <Link
-                  className="rounded-lg border border-slate-200 bg-slate-50 p-3 font-semibold text-slate-950"
-                  href={`/chats/${chat.id}`}
-                  key={chat.id}
-                >
-                  {chat.title || "Supervised chat"}
-                </Link>
-              ))}
+              {chats
+                .filter((chat) => chat.chat_type === "SUPERVISED_PRIVATE_CHAT")
+                .map((chat) => (
+                  <Link
+                    className="rounded-lg border border-slate-200 bg-slate-50 p-3 font-semibold text-slate-950"
+                    href={`/chats/${chat.id}`}
+                    key={chat.id}
+                  >
+                    {chat.title || "Private Chat"}
+                  </Link>
+                ))}
             </div>
           )}
         </DashboardCard>

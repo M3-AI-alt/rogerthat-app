@@ -59,6 +59,19 @@ export default function TeacherDashboardPage(): ReactElement {
 
     return classes.find((classItem) => classItem.id === reportClassId) ?? null;
   }, [classes, reports]);
+  const latestClassRoom = useMemo(() => {
+    if (!latestReportClass) {
+      return null;
+    }
+
+    return (
+      chats.find(
+        (chat) =>
+          chat.chat_type === "CLASS_GROUP_CHAT" &&
+          chat.class_id === latestReportClass.id
+      ) ?? null
+    );
+  }, [chats, latestReportClass]);
 
   async function loadTeacherWorkspace() {
     setErrorMessage("");
@@ -112,7 +125,7 @@ export default function TeacherDashboardPage(): ReactElement {
           Teacher dashboard
         </h1>
         <p className="mt-3 text-base leading-7 text-slate-600">
-          Your workspace for supervised parent chats and class reports.
+          Your class rooms, reports, and private chats.
         </p>
         {profile ? (
           <p className="mt-3 inline-flex rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-sm font-semibold text-blue-800">
@@ -128,20 +141,17 @@ export default function TeacherDashboardPage(): ReactElement {
       ) : null}
 
       <section className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <DashboardCard label="Class rooms" value={classes.length}>
-          Classes assigned by the CEO.
+        <DashboardCard label="My Class Rooms" value={classes.length}>
+          Classes assigned by the school.
         </DashboardCard>
-        <DashboardCard label="Supervised chats" value={chats.length}>
-          Includes class group and private parent conversations.
+        <DashboardCard label="Send Report" value={reports.length}>
+          Reports sent in your class rooms.
         </DashboardCard>
         <DashboardCard
-          label="Private chats"
+          label="Private Chats"
           value={getChatTypeCount(chats, "SUPERVISED_PRIVATE_CHAT")}
         >
-          One-to-one parent chats with CEO and Director oversight.
-        </DashboardCard>
-        <DashboardCard label="Reports sent" value={reports.length}>
-          Reports created from your teacher account.
+          One-to-one chats with parents.
         </DashboardCard>
       </section>
 
@@ -150,18 +160,18 @@ export default function TeacherDashboardPage(): ReactElement {
           className="inline-flex min-h-12 items-center justify-center rounded-lg bg-slate-950 px-5 text-base font-semibold text-white shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-slate-800 focus:outline-none focus:ring-4 focus:ring-blue-500/30 active:scale-[0.98]"
           href="/chats"
         >
-          My Chats
+          Rooms & Chats
         </Link>
-        {latestReportClass ? (
+        {latestClassRoom ? (
           <Link
             className="inline-flex min-h-12 items-center justify-center rounded-lg bg-blue-700 px-5 text-base font-semibold text-white shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-500/30 active:scale-[0.98]"
-            href={`/classes/${latestReportClass.id}`}
+            href={`/chats/${latestClassRoom.id}`}
           >
-            Create Class Report
+            Send Report
           </Link>
         ) : (
           <span className="inline-flex min-h-12 items-center justify-center rounded-lg border border-slate-200 bg-white px-5 text-center text-base font-semibold text-slate-500">
-            Create Class Report
+            Send Report
           </span>
         )}
         <Link
@@ -173,13 +183,13 @@ export default function TeacherDashboardPage(): ReactElement {
       </section>
 
       <section className="mt-8 grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
-        <DashboardCard label="My class rooms" value={classes.length}>
+        <DashboardCard label="My Class Rooms" value={classes.length}>
           {isLoading ? (
             <p>Loading class rooms...</p>
           ) : classes.length === 0 ? (
             <EmptyState
-              description="You are not assigned to any class yet. Ask the CEO to assign you to a class."
-              title="You are not assigned to any class yet."
+              description="The school will add you to a class room when it is ready."
+              title="You are not assigned to any class room yet."
             />
           ) : (
             <div className="grid gap-3">
@@ -199,25 +209,25 @@ export default function TeacherDashboardPage(): ReactElement {
                       {getClassLabel(classItem)}
                     </p>
                     <p className="mt-2 text-sm text-slate-600">
-                      Open reports or join the supervised class chat.
+                    Open the room to send messages and reports.
                     </p>
                     <div className="mt-4 flex flex-wrap gap-2">
                       <Link
                         className="inline-flex min-h-10 items-center rounded-lg bg-slate-950 px-4 text-sm font-semibold text-white"
                         href={`/classes/${classItem.id}`}
                       >
-                        Open class reports
+                        Open reports
                       </Link>
                       {classChat ? (
                         <Link
                           className="inline-flex min-h-10 items-center rounded-lg border border-blue-200 bg-blue-50 px-4 text-sm font-semibold text-blue-800"
                           href={`/chats/${classChat.id}`}
                         >
-                          Open class chat
+                          Open room / Send report
                         </Link>
                       ) : (
                         <span className="inline-flex min-h-10 items-center rounded-lg border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-500">
-                          Class chat not created yet
+                          Room not created yet
                         </span>
                       )}
                     </div>
@@ -228,27 +238,30 @@ export default function TeacherDashboardPage(): ReactElement {
           )}
         </DashboardCard>
 
-        <DashboardCard label="Chat status">
+        <DashboardCard label="Private Chats">
           {isLoading ? (
             <p>Loading chats...</p>
-          ) : chats.length === 0 ? (
+          ) : chats.filter((chat) => chat.chat_type === "SUPERVISED_PRIVATE_CHAT")
+              .length === 0 ? (
             <EmptyState
               actionHref="/chats"
               actionLabel="Open chats"
-              description="Supervised conversations assigned to you will appear here."
-              title="No conversations yet"
+              description="Private chats with parents will appear here."
+              title="No private chats yet"
             />
           ) : (
             <div className="grid gap-3">
-              <p className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 font-semibold text-emerald-800">
-                CEO supervision visible
-              </p>
-              <p className="rounded-lg border border-blue-200 bg-blue-50 p-3 font-semibold text-blue-800">
-                Director included
-              </p>
-              <p className="rounded-lg border border-slate-200 bg-slate-50 p-3 font-semibold text-slate-700">
-                No hidden private chat
-              </p>
+              {chats
+                .filter((chat) => chat.chat_type === "SUPERVISED_PRIVATE_CHAT")
+                .map((chat) => (
+                  <Link
+                    className="rounded-lg border border-slate-200 bg-slate-50 p-3 font-semibold text-slate-950"
+                    href={`/chats/${chat.id}`}
+                    key={chat.id}
+                  >
+                    {chat.title || "Private Chat"}
+                  </Link>
+                ))}
             </div>
           )}
         </DashboardCard>

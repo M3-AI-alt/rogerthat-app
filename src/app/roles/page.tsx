@@ -7,12 +7,12 @@ const roleDetails = [
   {
     label: "CEO / Owner",
     description:
-      "The single owner account. The CEO creates classes, approves parents, assigns teachers, assigns parents to classes, and supervises every class group and private chat.",
+      "The single owner account. The CEO creates class rooms, approves parents, assigns teachers, assigns parents to classes, and can monitor rooms and private chats.",
   },
   {
     label: "Director",
     description:
-      "Supervises reports and chats but cannot take or export the full parent database.",
+      "Can monitor reports and chats but cannot take or export the full parent database.",
   },
   {
     label: "Director with Admin access",
@@ -27,17 +27,17 @@ const roleDetails = [
   {
     label: "Parent",
     description:
-      "Uses the mobile-only experience to read reports and supervised chats for assigned classes only.",
+      "Uses the mobile-first experience to read reports and messages for assigned class rooms only.",
   },
   {
-    label: "Class group chat",
+    label: "Class Room",
     description:
-      "Public chat for the whole class parents, teacher, director, and CEO. The CEO must be present.",
+      "Shared room for a class, its parents, assigned teacher, directors, and CEO.",
   },
   {
-    label: "Private teacher-parent chat",
+    label: "Private Chat",
     description:
-      "Private supervised chat with one teacher, one parent, director, and CEO. The CEO must be present.",
+      "Private chat with one teacher and one parent, visible to school leadership.",
   },
 ] as const;
 
@@ -53,8 +53,8 @@ export default function RolesPage(): ReactElement {
           RogerThat roles
         </h1>
         <p className="mt-3 text-base leading-7 text-slate-600">
-          CEO-controlled planning for classes, parent approvals, assignments,
-          and supervised communication.
+          CEO-controlled planning for class rooms, parent approvals,
+          assignments, and school communication.
         </p>
       </section>
 

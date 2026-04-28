@@ -23,9 +23,15 @@ function getProfileLabel(profile: StaffProfile): string {
 }
 
 function getChatTypeLabel(chat: Chat): string {
-  return chat.chat_type === "CLASS_GROUP_CHAT"
-    ? "Class group chat"
-    : "Supervised private chat";
+  return chat.chat_type === "CLASS_GROUP_CHAT" ? "Class Room" : "Private Chat";
+}
+
+function getChatLabel(chat: Chat): string {
+  if (chat.chat_type === "CLASS_GROUP_CHAT" && chat.class_groups) {
+    return `${chat.class_groups.code} Class Room`;
+  }
+
+  return chat.title || getChatTypeLabel(chat);
 }
 
 function getParticipantSummary(chat: Chat): string {
@@ -105,12 +111,12 @@ export default function CeoChatsPage(): ReactElement {
       const chat = await createClassGroupChat(classChatClassId);
       setClassChatClassId("");
       setSuccessMessage(
-        `Class group chat is ready: ${chat.title || "Supervised chat"}.`
+        `Class room is ready: ${chat.title || "Class Room"}.`
       );
       await loadChatData();
     } catch {
       setErrorMessage(
-        "Could not create class group chat. Choose a class and try again."
+        "Could not open this class room. Choose a class and try again."
       );
     } finally {
       setIsCreatingClassChat(false);
@@ -134,13 +140,11 @@ export default function CeoChatsPage(): ReactElement {
       setPrivateChatParentId("");
       setPrivateChatTeacherId("");
       setPrivateChatDirectorIds([]);
-      setSuccessMessage(
-        "Supervised private chat created with CEO and Director included."
-      );
+      setSuccessMessage("Private chat created.");
       await loadChatData();
     } catch {
       setErrorMessage(
-        "Could not create supervised private chat. Choose a class, teacher, parent, and at least one Director."
+        "Could not create private chat. Choose a class, teacher, parent, and at least one Director."
       );
     } finally {
       setIsCreatingPrivateChat(false);
@@ -171,29 +175,14 @@ export default function CeoChatsPage(): ReactElement {
           CEO / Owner
         </p>
         <h1 className="mt-3 text-3xl font-semibold text-slate-950">
-          Manage chats
+          Rooms & Private Chats
         </h1>
         <p className="mt-3 text-base leading-7 text-slate-600">
-          CEO must be inside every class group chat and every supervised private
-          chat. No hidden teacher-parent communication is allowed.
+          Create class rooms and private chats for school communication.
         </p>
       </section>
 
       <section className="mt-8 grid gap-4">
-        <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="grid gap-2 text-sm font-semibold text-slate-700 sm:grid-cols-3">
-            <p className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-emerald-800">
-              Supervised by CEO
-            </p>
-            <p className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-blue-800">
-              Director included
-            </p>
-            <p className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-slate-700">
-              No hidden private chat
-            </p>
-          </div>
-        </div>
-
         {errorMessage ? (
           <p className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm leading-6 text-red-700">
             {errorMessage}
@@ -211,12 +200,11 @@ export default function CeoChatsPage(): ReactElement {
         >
           <div>
             <p className="text-base font-semibold text-slate-950">
-              Create/open class group chat
+              Create/open class room
             </p>
             <p className="mt-1 text-sm leading-6 text-slate-600">
-              Adds CEO, Directors, assigned teacher, and assigned parents. If
-              the class chat already exists, RogerThat opens and updates it
-              instead of creating a duplicate.
+              Opens one room for the selected class with assigned teachers and
+              parents.
             </p>
           </div>
           <label className="grid gap-2 text-sm font-medium text-slate-700">
@@ -240,7 +228,7 @@ export default function CeoChatsPage(): ReactElement {
             disabled={isCreatingClassChat || isLoading}
             type="submit"
           >
-            {isCreatingClassChat ? "Opening..." : "Create/open class group chat"}
+            {isCreatingClassChat ? "Opening..." : "Create/open class room"}
           </button>
         </form>
 
@@ -250,11 +238,10 @@ export default function CeoChatsPage(): ReactElement {
         >
           <div>
             <p className="text-base font-semibold text-slate-950">
-              Create supervised private chat
+              Create private chat
             </p>
             <p className="mt-1 text-sm leading-6 text-slate-600">
-              One teacher and one parent, with CEO and at least one Director
-              visibly included.
+              One teacher and one parent, connected to a class room.
             </p>
           </div>
           <label className="grid gap-2 text-sm font-medium text-slate-700">
@@ -308,13 +295,13 @@ export default function CeoChatsPage(): ReactElement {
 
           <div className="grid gap-2">
             <p className="text-sm font-medium text-slate-700">
-              Director included
+              Director
             </p>
             <div className="grid gap-2">
               {directors.length === 0 ? (
                 <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
                   Add at least one approved Director profile before creating a
-                  supervised private chat.
+                  private chat.
                 </p>
               ) : (
                 directors.map((director) => (
@@ -342,22 +329,22 @@ export default function CeoChatsPage(): ReactElement {
           >
             {isCreatingPrivateChat
               ? "Creating..."
-              : "Create supervised private chat"}
+              : "Create private chat"}
           </button>
         </form>
 
         <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
           <p className="text-sm font-medium text-slate-500">All chats</p>
           <h2 className="mt-1 text-xl font-semibold text-slate-950">
-            Supervised chat rooms
+            Rooms & Private Chats
           </h2>
           <div className="mt-5 grid gap-3">
             {isLoading ? (
               <p className="text-sm text-slate-600">Loading chats...</p>
             ) : chats.length === 0 ? (
               <EmptyState
-                description="Create a class group chat or supervised private chat to start the demo."
-                title="No conversations yet"
+                description="Create a class room or private chat to start messaging."
+                title="No rooms or chats yet"
               />
             ) : (
               chats.map((chat) => (
@@ -367,7 +354,7 @@ export default function CeoChatsPage(): ReactElement {
                   key={chat.id}
                 >
                   <p className="text-base font-semibold text-slate-950">
-                    {chat.title || "Supervised chat"}
+                    {getChatLabel(chat)}
                   </p>
                   <p className="mt-1 text-sm text-slate-600">
                     {getChatTypeLabel(chat)}
