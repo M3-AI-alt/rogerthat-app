@@ -14,7 +14,14 @@ import type { UserProfile } from "@/lib/profile";
 import { ROUTES } from "@/lib/routes";
 import { supabase } from "@/lib/supabase/client";
 import Link from "next/link";
-import { type FormEvent, type ReactElement, useEffect, useState } from "react";
+import {
+  type Dispatch,
+  type FormEvent,
+  type ReactElement,
+  type SetStateAction,
+  useEffect,
+  useState,
+} from "react";
 
 type StaffProfile = Pick<UserProfile, "id" | "full_name" | "email" | "role">;
 
@@ -55,6 +62,11 @@ export default function CeoChatsPage(): ReactElement {
   const [parents, setParents] = useState<StaffProfile[]>([]);
   const [teachers, setTeachers] = useState<StaffProfile[]>([]);
   const [classChatClassId, setClassChatClassId] = useState("");
+  const [classChatDirectorIds, setClassChatDirectorIds] = useState<string[]>(
+    []
+  );
+  const [classChatParentIds, setClassChatParentIds] = useState<string[]>([]);
+  const [classChatTeacherIds, setClassChatTeacherIds] = useState<string[]>([]);
   const [privateChatClassId, setPrivateChatClassId] = useState("");
   const [privateChatParentId, setPrivateChatParentId] = useState("");
   const [privateChatTeacherId, setPrivateChatTeacherId] = useState("");
@@ -108,8 +120,15 @@ export default function CeoChatsPage(): ReactElement {
     setIsCreatingClassChat(true);
 
     try {
-      const chat = await createClassGroupChat(classChatClassId);
+      const chat = await createClassGroupChat(classChatClassId, {
+        directorIds: classChatDirectorIds,
+        parentIds: classChatParentIds,
+        teacherIds: classChatTeacherIds,
+      });
       setClassChatClassId("");
+      setClassChatDirectorIds([]);
+      setClassChatParentIds([]);
+      setClassChatTeacherIds([]);
       setSuccessMessage(
         `Class room is ready: ${chat.title || "Class Room"}.`
       );
@@ -144,7 +163,7 @@ export default function CeoChatsPage(): ReactElement {
       await loadChatData();
     } catch {
       setErrorMessage(
-        "Could not create private chat. Choose a class, teacher, parent, and at least one Director."
+        "Could not create private chat. Choose a class, teacher, and parent."
       );
     } finally {
       setIsCreatingPrivateChat(false);
@@ -156,6 +175,17 @@ export default function CeoChatsPage(): ReactElement {
       currentIds.includes(directorId)
         ? currentIds.filter((id) => id !== directorId)
         : [...currentIds, directorId]
+    );
+  }
+
+  function toggleId(
+    id: string,
+    setIds: Dispatch<SetStateAction<string[]>>
+  ) {
+    setIds((currentIds) =>
+      currentIds.includes(id)
+        ? currentIds.filter((currentId) => currentId !== id)
+        : [...currentIds, id]
     );
   }
 
@@ -203,8 +233,8 @@ export default function CeoChatsPage(): ReactElement {
               Create/open class room
             </p>
             <p className="mt-1 text-sm leading-6 text-slate-600">
-              Opens one room for the selected class with assigned teachers and
-              parents.
+              Opens one room for the selected class. Add any extra teachers,
+              parents, or directors who should join the room.
             </p>
           </div>
           <label className="grid gap-2 text-sm font-medium text-slate-700">
@@ -223,6 +253,71 @@ export default function CeoChatsPage(): ReactElement {
               ))}
             </select>
           </label>
+          <div className="grid gap-3 lg:grid-cols-3">
+            <div className="grid gap-2">
+              <p className="text-sm font-medium text-slate-700">Teachers</p>
+              {teachers.length === 0 ? (
+                <p className="text-sm text-slate-500">No teachers yet.</p>
+              ) : (
+                teachers.map((teacher) => (
+                  <label
+                    className="flex min-h-10 items-center gap-3 rounded-lg border border-slate-200 px-3 text-sm font-medium text-slate-700"
+                    key={teacher.id}
+                  >
+                    <input
+                      checked={classChatTeacherIds.includes(teacher.id)}
+                      className="h-4 w-4"
+                      onChange={() => toggleId(teacher.id, setClassChatTeacherIds)}
+                      type="checkbox"
+                    />
+                    {getProfileLabel(teacher)}
+                  </label>
+                ))
+              )}
+            </div>
+            <div className="grid gap-2">
+              <p className="text-sm font-medium text-slate-700">Parents</p>
+              {parents.length === 0 ? (
+                <p className="text-sm text-slate-500">No parents yet.</p>
+              ) : (
+                parents.map((parent) => (
+                  <label
+                    className="flex min-h-10 items-center gap-3 rounded-lg border border-slate-200 px-3 text-sm font-medium text-slate-700"
+                    key={parent.id}
+                  >
+                    <input
+                      checked={classChatParentIds.includes(parent.id)}
+                      className="h-4 w-4"
+                      onChange={() => toggleId(parent.id, setClassChatParentIds)}
+                      type="checkbox"
+                    />
+                    {getProfileLabel(parent)}
+                  </label>
+                ))
+              )}
+            </div>
+            <div className="grid gap-2">
+              <p className="text-sm font-medium text-slate-700">Directors</p>
+              {directors.length === 0 ? (
+                <p className="text-sm text-slate-500">No directors yet.</p>
+              ) : (
+                directors.map((director) => (
+                  <label
+                    className="flex min-h-10 items-center gap-3 rounded-lg border border-slate-200 px-3 text-sm font-medium text-slate-700"
+                    key={director.id}
+                  >
+                    <input
+                      checked={classChatDirectorIds.includes(director.id)}
+                      className="h-4 w-4"
+                      onChange={() => toggleId(director.id, setClassChatDirectorIds)}
+                      type="checkbox"
+                    />
+                    {getProfileLabel(director)}
+                  </label>
+                ))
+              )}
+            </div>
+          </div>
           <button
             className="min-h-12 rounded-lg bg-slate-950 px-5 text-base font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-400"
             disabled={isCreatingClassChat || isLoading}
@@ -241,7 +336,7 @@ export default function CeoChatsPage(): ReactElement {
               Create private chat
             </p>
             <p className="mt-1 text-sm leading-6 text-slate-600">
-              One teacher and one parent, connected to a class room.
+              Choose the teacher and parent. The CEO is included by default.
             </p>
           </div>
           <label className="grid gap-2 text-sm font-medium text-slate-700">
@@ -295,13 +390,13 @@ export default function CeoChatsPage(): ReactElement {
 
           <div className="grid gap-2">
             <p className="text-sm font-medium text-slate-700">
-              Director
+              Director optional
             </p>
             <div className="grid gap-2">
               {directors.length === 0 ? (
                 <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
-                  Add at least one approved Director profile before creating a
-                  private chat.
+                  No approved Director profiles yet. You can still create this
+                  private chat with CEO supervision.
                 </p>
               ) : (
                 directors.map((director) => (

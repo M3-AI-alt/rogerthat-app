@@ -12,6 +12,13 @@ import {
   type ChatMessage,
   type MessageType,
 } from "@/lib/chats";
+import {
+  getMessageAttachments,
+  isSupportedMessageAttachment,
+  messageAttachmentAccept,
+  uploadMessageAttachment,
+  type MessageAttachment,
+} from "@/lib/message-attachments";
 import { getCurrentUserProfile, type UserProfile } from "@/lib/profile";
 import { supabase } from "@/lib/supabase/client";
 import { useParams } from "next/navigation";
@@ -80,6 +87,18 @@ function formatTime(value: string): string {
   }).format(new Date(value));
 }
 
+function formatFileSize(size: number | null): string {
+  if (!size) {
+    return "File";
+  }
+
+  if (size < 1024 * 1024) {
+    return `${Math.max(1, Math.round(size / 1024))} KB`;
+  }
+
+  return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+}
+
 function ParticipantGroup({
   members,
   title,
@@ -114,13 +133,31 @@ export default function ChatDetailPage(): ReactElement {
   const [chat, setChat] = useState<Chat | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [attachmentsByMessage, setAttachmentsByMessage] = useState<
+    Record<string, MessageAttachment[]>
+  >({});
   const [content, setContent] = useState("");
   const [messageType, setMessageType] = useState<MessageType>("CHAT");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const [newMessageCount, setNewMessageCount] = useState(0);
   const [showNewMessageHint, setShowNewMessageHint] = useState(false);
+
+  const loadMessages = useCallback(async () => {
+    const messageResult = await getChatMessages(chatId);
+    setMessages(messageResult);
+
+    try {
+      const attachmentGroups = await getMessageAttachments(
+        messageResult.map((message) => message.id)
+      );
+      setAttachmentsByMessage(attachmentGroups);
+    } catch {
+      setAttachmentsByMessage({});
+    }
+  }, [chatId]);
 
   const loadChat = useCallback(async () => {
     setErrorMessage("");
@@ -135,6 +172,14 @@ export default function ChatDetailPage(): ReactElement {
       setChat(chatResult);
       setMessages(messageResult);
       setProfile(profileResult);
+      try {
+        const attachmentGroups = await getMessageAttachments(
+          messageResult.map((message) => message.id)
+        );
+        setAttachmentsByMessage(attachmentGroups);
+      } catch {
+        setAttachmentsByMessage({});
+      }
 
       if (!chatResult) {
         setErrorMessage("This chat was not found or you are not a member.");
@@ -152,7 +197,7 @@ export default function ChatDetailPage(): ReactElement {
     event.preventDefault();
     const trimmedContent = content.trim();
 
-    if (!trimmedContent) {
+    if (!trimmedContent && !selectedFile) {
       return;
     }
 
@@ -160,17 +205,31 @@ export default function ChatDetailPage(): ReactElement {
     setIsSending(true);
 
     try {
+      const textContent = trimmedContent || selectedFile?.name || "Attachment";
       const messageContent =
         messageType === "REPORT"
-          ? `[REPORT]\n${trimmedContent}`
-          : trimmedContent;
+          ? `[REPORT]\n${textContent}`
+          : textContent;
       const message = await sendMessage(chatId, messageContent);
+
+      if (selectedFile) {
+        const attachment = await uploadMessageAttachment(selectedFile, message.id);
+        setAttachmentsByMessage((currentAttachments) => ({
+          ...currentAttachments,
+          [message.id]: [
+            ...(currentAttachments[message.id] ?? []),
+            attachment,
+          ],
+        }));
+      }
+
       setMessages((currentMessages) =>
         currentMessages.some((currentMessage) => currentMessage.id === message.id)
           ? currentMessages
           : [...currentMessages, message]
       );
       setContent("");
+      setSelectedFile(null);
       setMessageType("CHAT");
     } catch {
       setErrorMessage("Could not send this message. Please try again.");
@@ -186,7 +245,7 @@ export default function ChatDetailPage(): ReactElement {
 
     event.preventDefault();
 
-    if (!content.trim() || isSending) {
+    if ((!content.trim() && !selectedFile) || isSending) {
       return;
     }
 
@@ -227,7 +286,7 @@ export default function ChatDetailPage(): ReactElement {
         () => {
           setNewMessageCount((currentCount) => currentCount + 1);
           setShowNewMessageHint(true);
-          void getChatMessages(chatId).then(setMessages).catch(() => {
+          void loadMessages().catch(() => {
             setErrorMessage("A new message arrived, but it could not be loaded.");
           });
 
@@ -241,7 +300,7 @@ export default function ChatDetailPage(): ReactElement {
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [chatId]);
+  }, [chatId, loadMessages]);
 
   return (
     <AppShell>
@@ -334,6 +393,7 @@ export default function ChatDetailPage(): ReactElement {
                 const displayContent = isReport
                   ? message.content.replace(/^\[REPORT\]\n/, "")
                   : message.content;
+                const messageAttachments = attachmentsByMessage[message.id] ?? [];
 
                 return (
                   <article
@@ -363,6 +423,26 @@ export default function ChatDetailPage(): ReactElement {
                       <p className="mt-2 whitespace-pre-wrap text-[15px] leading-6">
                         {displayContent}
                       </p>
+                      {messageAttachments.length > 0 ? (
+                        <div className="mt-3 grid gap-2">
+                          {messageAttachments.map((attachment) => (
+                            <a
+                              className="rounded-lg border border-slate-200 bg-white/80 px-3 py-2 text-sm font-semibold text-slate-800 transition hover:border-blue-300 hover:text-blue-700"
+                              href={attachment.download_url ?? attachment.file_url}
+                              key={attachment.id}
+                              rel="noreferrer"
+                              target="_blank"
+                            >
+                              <span className="block break-all">
+                                {attachment.file_name}
+                              </span>
+                              <span className="mt-1 block text-xs font-medium text-slate-500">
+                                {formatFileSize(attachment.file_size)}
+                              </span>
+                            </a>
+                          ))}
+                        </div>
+                      ) : null}
                       <p className="mt-2 text-right text-[11px] font-medium text-slate-500">
                         {formatTime(message.created_at)}
                       </p>
@@ -400,7 +480,44 @@ export default function ChatDetailPage(): ReactElement {
               >
                 Report
               </button>
+              <label className="inline-flex min-h-10 cursor-pointer items-center rounded-lg border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700">
+                Upload file
+                <input
+                  accept={messageAttachmentAccept}
+                  className="sr-only"
+                  onChange={(event) => {
+                    const file = event.target.files?.[0] ?? null;
+
+                    if (file && !isSupportedMessageAttachment(file)) {
+                      setErrorMessage(
+                        "Supported files: images, PDF, Word, Excel, PowerPoint, and CSV."
+                      );
+                      event.target.value = "";
+                      setSelectedFile(null);
+                      return;
+                    }
+
+                    setErrorMessage("");
+                    setSelectedFile(file);
+                  }}
+                  type="file"
+                />
+              </label>
             </div>
+            {selectedFile ? (
+              <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-900">
+                <span className="font-medium">
+                  {selectedFile.name} · {formatFileSize(selectedFile.size)}
+                </span>
+                <button
+                  className="font-semibold text-blue-800"
+                  onClick={() => setSelectedFile(null)}
+                  type="button"
+                >
+                  Remove
+                </button>
+              </div>
+            ) : null}
             <label className="grid gap-2 text-sm font-medium text-slate-700">
               {messageType === "REPORT" ? "Report" : "Message"}
               <textarea
@@ -417,7 +534,7 @@ export default function ChatDetailPage(): ReactElement {
             </label>
             <button
               className="min-h-12 rounded-lg bg-slate-950 px-5 text-base font-semibold text-white shadow-sm disabled:cursor-not-allowed disabled:bg-slate-400"
-              disabled={isSending || !content.trim()}
+              disabled={isSending || (!content.trim() && !selectedFile)}
               type="submit"
             >
               {isSending

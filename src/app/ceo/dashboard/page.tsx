@@ -213,7 +213,14 @@ export default function CeoDashboardPage(): ReactElement {
             />
             <SetupChecklistItem
               description="Teacher opens the class and sends the first update."
-              href={classes[0] ? `/classes/${classes[0].id}` : ROUTES.ceoClasses}
+              href={
+                chats.find((chat) => chat.chat_type === "CLASS_GROUP_CHAT")
+                  ? `/chats/${
+                      chats.find((chat) => chat.chat_type === "CLASS_GROUP_CHAT")
+                        ?.id
+                    }`
+                  : ROUTES.ceoChats
+              }
               isDone={reportCount > 0}
               title="Send first report"
             />
@@ -236,7 +243,7 @@ export default function CeoDashboardPage(): ReactElement {
           <DashboardCard label="Rooms & Chats" value={chats.length} />
         </div>
         <DashboardCard label="Reports" value={reportCount}>
-          Report messages sent across class rooms.
+          Report messages are sent inside class rooms.
         </DashboardCard>
         <DashboardCard label="Open class rooms">
           {isLoadingClasses ? (
@@ -254,18 +261,32 @@ export default function CeoDashboardPage(): ReactElement {
                 className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-200 p-4"
                 key={classGroup.id}
               >
-                <Link
-                  className="font-semibold text-slate-950 underline-offset-4 hover:underline"
-                  href={`/classes/${classGroup.id}`}
-                >
+                <p className="font-semibold text-slate-950">
                   {classGroup.code} - {classGroup.name}
-                </Link>
-                <Link
-                  className="inline-flex min-h-10 items-center rounded-lg border border-blue-200 bg-blue-50 px-4 text-sm font-semibold text-blue-800"
-                  href={ROUTES.ceoChats}
-                >
-                  Open room
-                </Link>
+                </p>
+                {(() => {
+                  const classRoom = chats.find(
+                    (chat) =>
+                      chat.chat_type === "CLASS_GROUP_CHAT" &&
+                      chat.class_id === classGroup.id
+                  );
+
+                  return classRoom ? (
+                    <Link
+                      className="inline-flex min-h-10 items-center rounded-lg bg-slate-950 px-4 text-sm font-semibold text-white"
+                      href={`/chats/${classRoom.id}`}
+                    >
+                      Open Room
+                    </Link>
+                  ) : (
+                    <Link
+                      className="inline-flex min-h-10 items-center rounded-lg border border-blue-200 bg-blue-50 px-4 text-sm font-semibold text-blue-800"
+                      href={ROUTES.ceoChats}
+                    >
+                      Create Room
+                    </Link>
+                  );
+                })()}
               </div>
             ))
           )}

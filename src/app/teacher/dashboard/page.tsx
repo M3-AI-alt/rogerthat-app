@@ -209,21 +209,15 @@ export default function TeacherDashboardPage(): ReactElement {
                       {getClassLabel(classItem)}
                     </p>
                     <p className="mt-2 text-sm text-slate-600">
-                    Open the room to send messages and reports.
+                      Open the room to send messages and reports.
                     </p>
                     <div className="mt-4 flex flex-wrap gap-2">
-                      <Link
-                        className="inline-flex min-h-10 items-center rounded-lg bg-slate-950 px-4 text-sm font-semibold text-white"
-                        href={`/classes/${classItem.id}`}
-                      >
-                        Open reports
-                      </Link>
                       {classChat ? (
                         <Link
-                          className="inline-flex min-h-10 items-center rounded-lg border border-blue-200 bg-blue-50 px-4 text-sm font-semibold text-blue-800"
+                          className="inline-flex min-h-10 items-center rounded-lg bg-slate-950 px-4 text-sm font-semibold text-white"
                           href={`/chats/${classChat.id}`}
                         >
-                          Open room / Send report
+                          Open Room
                         </Link>
                       ) : (
                         <span className="inline-flex min-h-10 items-center rounded-lg border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-500">

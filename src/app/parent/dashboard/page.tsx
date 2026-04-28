@@ -102,20 +102,12 @@ export default function ParentDashboardPage(): ReactElement {
                       </p>
                     ) : null}
                     <div className="mt-4 flex flex-wrap gap-2">
-                      {assignment.class_id ? (
-                        <Link
-                          className="inline-flex min-h-10 items-center rounded-lg bg-slate-950 px-4 text-sm font-semibold text-white"
-                          href={`/classes/${assignment.class_id}`}
-                        >
-                          Open reports
-                        </Link>
-                      ) : null}
                       {classChat ? (
                         <Link
-                          className="inline-flex min-h-10 items-center rounded-lg border border-blue-200 bg-blue-50 px-4 text-sm font-semibold text-blue-800"
+                          className="inline-flex min-h-10 items-center rounded-lg bg-slate-950 px-4 text-sm font-semibold text-white"
                           href={`/chats/${classChat.id}`}
                         >
-                          Open room
+                          Open Room
                         </Link>
                       ) : (
                         <span className="inline-flex min-h-10 items-center rounded-lg border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-500">
@@ -130,28 +122,25 @@ export default function ParentDashboardPage(): ReactElement {
           )}
         </DashboardCard>
         <DashboardCard label="Latest Reports">
-          <EmptyState
-            actionHref={
-              assignments.find((assignment) => assignment.class_id)?.class_id
-                ? `/classes/${
-                    assignments.find((assignment) => assignment.class_id)
-                      ?.class_id
-                  }`
-                : undefined
-            }
-            actionLabel={
-              assignments.some((assignment) => assignment.class_id)
-                ? "Open reports"
-                : undefined
-            }
-            description="Reports will appear after your class room is active and a teacher sends a report."
-            title="No reports yet"
-          />
+          {(() => {
+            const firstClassRoom = chats.find(
+              (chat) => chat.chat_type === "CLASS_GROUP_CHAT"
+            );
+
+            return (
+              <EmptyState
+                actionHref={firstClassRoom ? `/chats/${firstClassRoom.id}` : undefined}
+                actionLabel={firstClassRoom ? "Open Room" : undefined}
+                description="Report messages will appear in your class room."
+                title="No report messages yet"
+              />
+            );
+          })()}
         </DashboardCard>
         <DashboardCard label="My Private Chats">
           {chats.filter((chat) => chat.chat_type === "SUPERVISED_PRIVATE_CHAT")
             .length === 0 ? (
-            <EmptyState
+          <EmptyState
               actionHref={assignments.length > 0 ? "/chats" : undefined}
               actionLabel={assignments.length > 0 ? "Open chats" : undefined}
               description={

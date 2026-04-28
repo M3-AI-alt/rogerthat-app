@@ -286,7 +286,16 @@ async function insertMembers(
   }
 }
 
-export async function createClassGroupChat(classId: string): Promise<Chat> {
+type ExtraClassRoomMembers = {
+  directorIds?: string[];
+  parentIds?: string[];
+  teacherIds?: string[];
+};
+
+export async function createClassGroupChat(
+  classId: string,
+  extraMembers: ExtraClassRoomMembers = {}
+): Promise<Chat> {
   const createdBy = await getCurrentUserId();
   const [
     existingChat,
@@ -326,9 +335,21 @@ export async function createClassGroupChat(classId: string): Promise<Chat> {
         member_role: "TEACHER",
         profile_id: teacherId,
       })),
+      ...(extraMembers.teacherIds ?? []).map((teacherId) => ({
+        member_role: "TEACHER",
+        profile_id: teacherId,
+      })),
       ...parentIds.map((parentId) => ({
         member_role: "PARENT",
         profile_id: parentId,
+      })),
+      ...(extraMembers.parentIds ?? []).map((parentId) => ({
+        member_role: "PARENT",
+        profile_id: parentId,
+      })),
+      ...(extraMembers.directorIds ?? []).map((directorId) => ({
+        member_role: "DIRECTOR",
+        profile_id: directorId,
       })),
     ]);
 
@@ -363,9 +384,21 @@ export async function createClassGroupChat(classId: string): Promise<Chat> {
       member_role: "TEACHER",
       profile_id: teacherId,
     })),
+    ...(extraMembers.teacherIds ?? []).map((teacherId) => ({
+      member_role: "TEACHER",
+      profile_id: teacherId,
+    })),
     ...parentIds.map((parentId) => ({
       member_role: "PARENT",
       profile_id: parentId,
+    })),
+    ...(extraMembers.parentIds ?? []).map((parentId) => ({
+      member_role: "PARENT",
+      profile_id: parentId,
+    })),
+    ...(extraMembers.directorIds ?? []).map((directorId) => ({
+      member_role: "DIRECTOR",
+      profile_id: directorId,
     })),
   ]);
 
@@ -378,10 +411,6 @@ export async function createSupervisedPrivateChat(
   parentId: string,
   directorIds: string[]
 ): Promise<Chat> {
-  if (directorIds.length === 0) {
-    throw new Error("Choose at least one Director for this private chat.");
-  }
-
   const createdBy = await getCurrentUserId();
   const [{ data: classGroup, error: classError }, ceos] = await Promise.all([
     supabase
