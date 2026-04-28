@@ -50,7 +50,7 @@ export default function CeoDashboardPage(): ReactElement {
         <p className="mt-3 text-base leading-7 text-slate-600">
           Full control overview for RogerThat.
         </p>
-        <div className="mt-5 grid gap-3 sm:grid-cols-3">
+        <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <Link
             className="inline-flex min-h-12 items-center justify-center rounded-lg bg-slate-950 px-5 text-base font-semibold text-white"
             href={ROUTES.ceoUsers}
@@ -68,6 +68,12 @@ export default function CeoDashboardPage(): ReactElement {
             href={ROUTES.ceoAssignParents}
           >
             Assign Parents
+          </Link>
+          <Link
+            className="inline-flex min-h-12 items-center justify-center rounded-lg border border-slate-300 bg-white px-5 text-base font-semibold text-slate-950"
+            href={ROUTES.ceoChats}
+          >
+            Manage Chats
           </Link>
         </div>
       </section>

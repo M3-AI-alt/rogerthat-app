@@ -4,6 +4,7 @@ import { mockChats } from "@/data/mock-chats";
 import { mockClasses } from "@/data/mock-classes";
 import { mockReports } from "@/data/mock-reports";
 import { mockTeachers } from "@/data/mock-users";
+import Link from "next/link";
 import type { ReactElement } from "react";
 
 export default function DirectorDashboardPage(): ReactElement {
@@ -22,6 +23,12 @@ export default function DirectorDashboardPage(): ReactElement {
       </section>
 
       <section className="mt-8 grid gap-4">
+        <Link
+          className="inline-flex min-h-12 items-center justify-center rounded-lg bg-slate-950 px-5 text-base font-semibold text-white"
+          href="/chats"
+        >
+          My Chats
+        </Link>
         <DashboardCard label="Classes supervised" value={mockClasses.length} />
         <DashboardCard label="Reports to review" value={mockReports.length} />
         <DashboardCard label="Active chats" value={mockChats.length} />

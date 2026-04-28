@@ -50,6 +50,12 @@ export default function ParentDashboardPage(): ReactElement {
       </section>
 
       <section className="mt-8 grid gap-4">
+        <Link
+          className="inline-flex min-h-12 items-center justify-center rounded-lg bg-slate-950 px-5 text-base font-semibold text-white"
+          href="/chats"
+        >
+          My Chats
+        </Link>
         <DashboardCard label="Assigned classes" value={assignments.length}>
           {isLoading ? (
             <p>Loading assigned classes...</p>
@@ -84,8 +90,8 @@ export default function ParentDashboardPage(): ReactElement {
           Reports will appear here after the reports system is added.
         </DashboardCard>
         <DashboardCard label="Supervised chats">
-          Chats will appear here after the chat system is added. CEO will be
-          present in every future class group and supervised private chat.
+          Use My Chats to view supervised class and private chats. CEO and
+          Director supervision is visible inside each chat.
         </DashboardCard>
       </section>
     </AppShell>

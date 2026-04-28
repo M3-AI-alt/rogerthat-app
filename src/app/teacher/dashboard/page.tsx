@@ -3,6 +3,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { mockChats } from "@/data/mock-chats";
 import { mockClasses } from "@/data/mock-classes";
 import { mockReports } from "@/data/mock-reports";
+import Link from "next/link";
 import type { ReactElement } from "react";
 
 const teacherId = "user-teacher-1";
@@ -34,6 +35,12 @@ export default function TeacherDashboardPage(): ReactElement {
         </DashboardCard>
 
         <div className="grid gap-3">
+          <Link
+            className="inline-flex min-h-14 items-center justify-center rounded-lg bg-slate-950 px-5 py-4 text-base font-semibold text-white"
+            href="/chats"
+          >
+            My Chats
+          </Link>
           <button className="min-h-14 rounded-lg bg-slate-950 px-5 py-4 text-base font-semibold text-white">
             Create class report
           </button>

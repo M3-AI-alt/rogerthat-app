@@ -1,6 +1,7 @@
 export const ROUTES = {
   ceoDashboard: "/ceo/dashboard",
   ceoClasses: "/ceo/classes",
+  ceoChats: "/ceo/chats",
   ceoAssignParents: "/ceo/assign-parents",
   ceoUsers: "/ceo/users",
   directorDashboard: "/director/dashboard",
