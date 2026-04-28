@@ -70,26 +70,49 @@ const valuePreviews = [
   "Every conversation is supervised",
 ] as const;
 
+const heroImages = [
+  {
+    alt: "Parent using RogerThat",
+    className: "object-[center_35%]",
+    src: "/person-parent.png",
+  },
+  {
+    alt: "Teacher using RogerThat",
+    className: "object-center",
+    src: "/person-teacher.png",
+  },
+  {
+    alt: "Mother using RogerThat",
+    className: "object-[center_30%]",
+    src: "/person-asian-mother.png",
+  },
+  {
+    alt: "Director using RogerThat",
+    className: "object-[center_30%]",
+    src: "/person-professional-woman.png",
+  },
+] as const;
+
 function BrandLockup(): ReactElement {
   return (
     <Link
-      className="group inline-flex flex-col items-start gap-2 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-500/30"
+      className="group inline-flex flex-col items-start gap-1 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-500/30"
       href="/"
     >
-      <span className="inline-flex min-h-14 items-center gap-3 rounded-lg bg-[#071b45] px-4 py-3 text-white shadow-xl shadow-blue-950/20 transition duration-200 group-hover:-translate-y-0.5 group-hover:scale-[1.01]">
+      <span className="inline-flex min-h-12 items-center gap-3 rounded-lg bg-[#071b45] px-3 py-2 text-white shadow-lg shadow-blue-950/15 transition duration-200 group-hover:-translate-y-0.5 group-hover:scale-[1.01]">
         <Image
           alt="Ben Oxford Hub logo"
-          className="h-14 w-14 object-contain"
-          height={56}
+          className="h-11 w-11 object-contain"
+          height={44}
           priority
           src="/ben-oxford-logo.png"
-          width={56}
+          width={44}
         />
-        <span className="block text-2xl font-semibold leading-none tracking-normal md:text-3xl">
+        <span className="block text-2xl font-semibold leading-none tracking-normal">
           RogerThat
         </span>
       </span>
-      <span className="pl-1 text-sm font-normal tracking-wide text-[#071b45] md:text-base">
+      <span className="pl-1 text-xs font-normal tracking-wide text-[#071b45] md:text-sm">
         by Ben Oxford Hub
       </span>
     </Link>
@@ -134,7 +157,7 @@ function NotificationCard({
 export default function Home(): ReactElement {
   return (
     <main className="min-h-screen bg-[#f5f8ff] text-[#071126]">
-      <header className="mx-auto flex w-full max-w-7xl items-center justify-between px-5 py-5 md:px-8">
+      <header className="mx-auto flex w-full max-w-7xl items-center justify-between px-5 py-4 md:px-8">
         <BrandLockup />
         <nav className="flex items-center gap-2">
           <Link
@@ -152,21 +175,21 @@ export default function Home(): ReactElement {
         </nav>
       </header>
 
-      <section className="mx-auto grid w-full max-w-7xl gap-10 px-5 pb-12 pt-6 md:grid-cols-[1fr_0.92fr] md:px-8 md:pb-20 md:pt-10">
+      <section className="mx-auto grid w-full max-w-7xl items-center gap-8 px-5 pb-8 pt-4 md:grid-cols-[1fr_0.92fr] md:px-8 md:pt-6">
         <div className="flex flex-col justify-center">
           <p className="text-sm font-bold uppercase tracking-wide text-blue-700">
             RogerThat by Ben Oxford Hub
           </p>
-          <h1 className="mt-5 max-w-3xl text-5xl font-black leading-[0.95] tracking-normal text-[#061636] md:text-7xl">
+          <h1 className="mt-4 max-w-3xl text-4xl font-black leading-[0.98] tracking-normal text-[#061636] sm:text-5xl lg:text-6xl">
             Your child&apos;s progress,
             <span className="block text-blue-700">right in your pocket.</span>
           </h1>
-          <p className="mt-6 max-w-xl text-lg leading-8 text-slate-700 md:text-xl">
+          <p className="mt-5 max-w-xl text-base leading-7 text-slate-700 md:text-lg">
             Get real updates from teachers and stay involved in your
             child&apos;s learning.
           </p>
 
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+          <div className="mt-7 flex flex-col gap-3 sm:flex-row">
             <Link
               className="inline-flex min-h-14 items-center justify-center rounded-lg bg-blue-700 px-6 text-base font-bold text-white shadow-xl shadow-blue-900/20 transition duration-200 hover:-translate-y-0.5 hover:scale-[1.02] hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-500/30 active:scale-[0.98]"
               href={ROUTES.login}
@@ -181,7 +204,7 @@ export default function Home(): ReactElement {
             </Link>
           </div>
 
-          <div className="mt-8 grid gap-3 sm:grid-cols-3">
+          <div className="mt-7 grid gap-3 sm:grid-cols-3">
             {valuePreviews.map((item) => (
               <div
                 className="rounded-lg border border-white bg-white/90 p-4 shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-lg"
@@ -195,40 +218,20 @@ export default function Home(): ReactElement {
           </div>
         </div>
 
-        <div className="relative min-h-[620px] overflow-hidden rounded-[2rem] border border-white bg-[#071b45] p-4 shadow-2xl shadow-blue-950/20">
+        <div className="relative h-[430px] overflow-hidden rounded-3xl border border-white bg-[#071b45] p-3 shadow-2xl shadow-blue-950/20 sm:h-[500px] lg:h-[540px]">
           <div className="grid h-full grid-cols-2 gap-3">
-            <div className="relative overflow-hidden rounded-3xl">
-              <Image
-                alt="Parent using RogerThat"
-                className="h-full w-full object-cover"
-                fill
-                priority
-                sizes="(max-width: 768px) 50vw, 320px"
-                src="/person-parent.png"
-              />
-            </div>
-            <div className="grid gap-3">
-              <div className="relative overflow-hidden rounded-3xl">
+            {heroImages.map((image) => (
+              <div className="relative overflow-hidden rounded-2xl" key={image.src}>
                 <Image
-                  alt="Teacher using RogerThat"
-                  className="h-full w-full object-cover"
+                  alt={image.alt}
+                  className={`h-full w-full object-cover ${image.className}`}
                   fill
                   priority
                   sizes="(max-width: 768px) 50vw, 320px"
-                  src="/person-teacher.png"
+                  src={image.src}
                 />
               </div>
-              <div className="relative overflow-hidden rounded-3xl">
-                <Image
-                  alt="School director using RogerThat"
-                  className="h-full w-full object-cover"
-                  fill
-                  priority
-                  sizes="(max-width: 768px) 50vw, 320px"
-                  src="/person-professional-woman.png"
-                />
-              </div>
-            </div>
+            ))}
           </div>
           <div className="absolute inset-0 bg-gradient-to-t from-[#071b45]/70 via-transparent to-white/10" />
           {notifications.map((notification) => (
