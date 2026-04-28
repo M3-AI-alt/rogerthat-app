@@ -76,20 +76,20 @@ function BrandLockup(): ReactElement {
       className="group inline-flex flex-col items-start gap-2 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-500/30"
       href="/"
     >
-      <span className="inline-flex min-h-14 items-center gap-3 rounded-2xl bg-[#071b45] px-4 py-3 text-white shadow-xl shadow-blue-950/20 transition duration-200 group-hover:-translate-y-0.5 group-hover:scale-[1.01]">
+      <span className="inline-flex min-h-14 items-center gap-3 rounded-lg bg-[#071b45] px-4 py-3 text-white shadow-xl shadow-blue-950/20 transition duration-200 group-hover:-translate-y-0.5 group-hover:scale-[1.01]">
         <Image
           alt="Ben Oxford Hub logo"
-          className="h-9 w-9 object-contain"
-          height={36}
+          className="h-11 w-11 object-contain"
+          height={44}
           priority
           src="/ben-oxford-logo.png"
-          width={36}
+          width={44}
         />
-        <span className="block text-2xl font-bold leading-none tracking-normal md:text-3xl">
+        <span className="block text-2xl font-semibold leading-none tracking-normal md:text-3xl">
           RogerThat
         </span>
       </span>
-      <span className="pl-1 text-sm font-semibold tracking-wide text-[#35517f] md:text-base">
+      <span className="pl-1 text-sm font-normal tracking-wide text-[#071b45] md:text-base">
         by Ben Oxford Hub
       </span>
     </Link>

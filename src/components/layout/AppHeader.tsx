@@ -41,19 +41,19 @@ export function AppHeader(): ReactElement {
           className="group inline-flex flex-col items-start gap-1 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-500/30"
           href="/"
         >
-          <span className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#071b45] px-3 py-2 text-white shadow-md shadow-blue-950/10 transition duration-200 group-hover:-translate-y-0.5 group-hover:scale-[1.01]">
+          <span className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-[#071b45] px-3 py-2 text-white shadow-md shadow-blue-950/10 transition duration-200 group-hover:-translate-y-0.5 group-hover:scale-[1.01]">
             <Image
               alt="Ben Oxford Hub logo"
-              className="h-7 w-7 object-contain"
-              height={28}
+              className="h-8 w-8 object-contain"
+              height={32}
               src="/ben-oxford-logo.png"
-              width={28}
+              width={32}
             />
-            <span className="block text-xl font-bold leading-5 tracking-normal">
+            <span className="block text-xl font-semibold leading-5 tracking-normal">
               RogerThat
             </span>
           </span>
-          <span className="pl-1 text-xs font-semibold tracking-wide text-[#35517f]">
+          <span className="pl-1 text-xs font-normal tracking-wide text-[#071b45]">
             by Ben Oxford Hub
           </span>
         </Link>
