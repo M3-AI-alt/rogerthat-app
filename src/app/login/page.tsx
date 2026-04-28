@@ -60,7 +60,7 @@ export default function LoginPage(): ReactElement {
     }
 
     if (!loginId.includes("@")) {
-      setErrorMessage("Use your email address for now. Phone login is coming later.");
+      setErrorMessage("Use your school email address.");
       return;
     }
 
@@ -159,7 +159,7 @@ export default function LoginPage(): ReactElement {
             autoComplete="email"
             className="min-h-14 rounded-lg border border-slate-300 bg-white px-4 text-base text-slate-950 shadow-sm transition focus:border-blue-600 focus:outline-none focus:ring-4 focus:ring-blue-500/20"
             onChange={(event) => setLoginId(event.target.value)}
-            placeholder="Phone number or email"
+            placeholder="Email address"
             required
             type="text"
             value={loginId}
@@ -208,26 +208,8 @@ export default function LoginPage(): ReactElement {
           Forgot password?
         </button>
 
-        <div className="my-6 flex items-center gap-4">
-          <div className="h-px flex-1 bg-slate-200" />
-          <span className="text-xs font-semibold uppercase text-slate-400">
-            or
-          </span>
-          <div className="h-px flex-1 bg-slate-200" />
-        </div>
-
         <button
-          className="min-h-14 rounded-lg border border-slate-300 bg-white px-5 text-base font-bold text-slate-700 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-blue-200 hover:text-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-500/30 active:scale-[0.98]"
-          onClick={() =>
-            setStatusMessage("Google login is not available yet.")
-          }
-          type="button"
-        >
-          Continue with Google
-        </button>
-
-        <button
-          className="mt-3 min-h-14 rounded-lg border border-slate-300 bg-white px-5 text-base font-bold text-slate-950 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-blue-200 hover:text-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-500/30 active:scale-[0.98]"
+          className="mt-6 min-h-14 rounded-lg border border-slate-300 bg-white px-5 text-base font-bold text-slate-950 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-blue-200 hover:text-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-500/30 active:scale-[0.98]"
           onClick={() => setShowCreateOptions((current) => !current)}
           type="button"
         >
