@@ -30,6 +30,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 
@@ -188,6 +189,8 @@ export default function ChatDetailPage(): ReactElement {
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
+  const imageInputRef = useRef<HTMLInputElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const allAttachments = useMemo(
     () => Object.values(attachmentsByMessage).flat(),
@@ -201,6 +204,18 @@ export default function ChatDetailPage(): ReactElement {
     () => allAttachments.filter((attachment) => !isImageAttachment(attachment)),
     [allAttachments]
   );
+
+  function clearSelectedFile() {
+    setSelectedFile(null);
+
+    if (imageInputRef.current) {
+      imageInputRef.current.value = "";
+    }
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  }
 
   const loadMessages = useCallback(async () => {
     const messageResult = await getChatMessages(chatId);
@@ -289,7 +304,7 @@ export default function ChatDetailPage(): ReactElement {
         [chatId]: message,
       }));
       setContent("");
-      setSelectedFile(null);
+      clearSelectedFile();
       setMessageType("CHAT");
     } catch {
       setErrorMessage("Could not send this message. Please try again.");
@@ -513,55 +528,68 @@ export default function ChatDetailPage(): ReactElement {
                 </span>
                 <button
                   className="shrink-0 font-semibold text-emerald-700"
-                  onClick={() => setSelectedFile(null)}
+                  onClick={clearSelectedFile}
                   type="button"
                 >
                   Remove
                 </button>
               </div>
             ) : null}
-            <div className="flex items-end gap-2">
+            <div className="flex items-end gap-1.5 sm:gap-2">
               <button
-                className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white text-xl text-slate-600"
+                aria-label="Emoji placeholder"
+                className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white text-xl text-slate-600 shadow-sm transition hover:bg-slate-50 sm:h-11 sm:w-11"
                 title="Emoji placeholder"
                 type="button"
               >
                 ☺
               </button>
-              <label className="grid h-11 w-11 shrink-0 cursor-pointer place-items-center rounded-full bg-white text-xs font-bold text-slate-600">
-                IMG
+              <label
+                className="grid h-10 w-10 shrink-0 cursor-pointer place-items-center rounded-full bg-white text-base font-bold text-slate-600 shadow-sm transition hover:bg-slate-50 sm:h-11 sm:w-11"
+                title="Upload image"
+              >
+                <span aria-hidden="true">IMG</span>
+                <span className="sr-only">Upload image</span>
                 <input
                   accept={imageAttachmentAccept}
                   className="sr-only"
                   onChange={handleFileChange}
+                  ref={imageInputRef}
                   type="file"
                 />
               </label>
-              <label className="grid h-11 w-11 shrink-0 cursor-pointer place-items-center rounded-full bg-white text-xs font-bold text-slate-600">
-                FILE
+              <label
+                className="grid h-10 w-10 shrink-0 cursor-pointer place-items-center rounded-full bg-white text-[10px] font-bold text-slate-600 shadow-sm transition hover:bg-slate-50 sm:h-11 sm:w-11"
+                title="Upload file"
+              >
+                <span aria-hidden="true">FILE</span>
+                <span className="sr-only">Upload file</span>
                 <input
                   accept={messageAttachmentAccept}
                   className="sr-only"
                   onChange={handleFileChange}
+                  ref={fileInputRef}
                   type="file"
                 />
               </label>
-              <div className="flex min-w-0 flex-1 items-end gap-2 rounded-2xl bg-white px-3 py-2">
-                <button
-                  className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                    messageType === "REPORT"
-                      ? "bg-blue-100 text-blue-800"
-                      : "bg-slate-100 text-slate-600"
-                  }`}
-                  onClick={() =>
-                    setMessageType((current) =>
-                      current === "REPORT" ? "CHAT" : "REPORT"
-                    )
-                  }
-                  type="button"
-                >
-                  {messageType === "REPORT" ? "Report" : "Chat"}
-                </button>
+              <button
+                aria-pressed={messageType === "REPORT"}
+                className={`h-10 shrink-0 rounded-full px-3 text-xs font-semibold shadow-sm transition sm:h-11 ${
+                  messageType === "REPORT"
+                    ? "bg-blue-600 text-white"
+                    : "bg-white text-slate-600 hover:bg-slate-50"
+                }`}
+                onClick={() =>
+                  setMessageType((current) =>
+                    current === "REPORT" ? "CHAT" : "REPORT"
+                  )
+                }
+                title="Toggle report message"
+                type="button"
+              >
+                Report
+              </button>
+              <div className="flex min-w-0 flex-1 items-end rounded-2xl bg-white px-3 py-2 shadow-sm">
                 <textarea
                   className="max-h-28 min-h-7 flex-1 resize-none bg-transparent text-[15px] outline-none"
                   onChange={(event) => setContent(event.target.value)}
@@ -571,11 +599,12 @@ export default function ChatDetailPage(): ReactElement {
                       ? "Write a report..."
                       : "Type a message"
                   }
+                  rows={1}
                   value={content}
                 />
               </div>
               <button
-                className="h-11 shrink-0 rounded-full bg-emerald-600 px-5 text-sm font-semibold text-white disabled:bg-slate-400"
+                className="h-10 shrink-0 rounded-full bg-emerald-600 px-4 text-sm font-semibold text-white shadow-sm disabled:bg-slate-400 sm:h-11 sm:px-5"
                 disabled={isSending || (!content.trim() && !selectedFile)}
                 type="submit"
               >
