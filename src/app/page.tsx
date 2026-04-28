@@ -38,26 +38,27 @@ const notifications = [
 
 const entryOptions = [
   {
-    title: "Parent access request",
-    description: "Parents can request access and wait for class assignment.",
+    title: "Get access to your child’s class",
+    description:
+      "Request access and start receiving daily reports from your child’s teacher.",
     href: ROUTES.signup,
-    action: "Request access",
+    action: "Request Access",
   },
   {
-    title: "Teacher account",
-    description: "Teacher accounts are created by school administration.",
+    title: "Teacher login",
+    description: "Access your classes and send daily reports.",
     href: ROUTES.login,
     action: "Log in",
   },
   {
-    title: "Director account",
-    description: "Director accounts are created by school administration.",
+    title: "Director login",
+    description: "Supervise communication and monitor activity.",
     href: ROUTES.login,
     action: "Log in",
   },
   {
-    title: "CEO login",
-    description: "CEO account signs in with school-managed credentials.",
+    title: "Admin / CEO",
+    description: "Manage classes, users, and all communication.",
     href: ROUTES.login,
     action: "Log in",
   },
@@ -240,9 +241,13 @@ export default function Home(): ReactElement {
       </section>
 
       <section className="mx-auto grid w-full max-w-7xl gap-4 px-5 pb-20 md:grid-cols-4 md:px-8">
-        {entryOptions.map((option) => (
+        {entryOptions.map((option, index) => (
           <Link
-            className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm transition duration-200 hover:-translate-y-1 hover:border-blue-200 hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-blue-500/30 active:scale-[0.99]"
+            className={`rounded-lg border p-5 shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-blue-500/30 active:scale-[0.99] ${
+              index === 0
+                ? "border-blue-200 bg-blue-50"
+                : "border-slate-200 bg-white hover:border-blue-200"
+            }`}
             href={option.href}
             key={option.title}
           >
