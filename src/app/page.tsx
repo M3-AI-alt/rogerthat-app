@@ -157,12 +157,12 @@ export default function Home(): ReactElement {
             RogerThat by Ben Oxford Hub
           </p>
           <h1 className="mt-5 max-w-3xl text-5xl font-black leading-[0.95] tracking-normal text-[#061636] md:text-7xl">
-            Connect instantly.
-            <span className="block text-blue-700">Understand effortlessly.</span>
+            Your child&apos;s progress,
+            <span className="block text-blue-700">right in your pocket.</span>
           </h1>
           <p className="mt-6 max-w-xl text-lg leading-8 text-slate-700 md:text-xl">
-            A supervised communication space for teachers and parents, built
-            around class reports, safe chats, and clear school oversight.
+            Get real updates from teachers and stay involved in your
+            child&apos;s learning.
           </p>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
