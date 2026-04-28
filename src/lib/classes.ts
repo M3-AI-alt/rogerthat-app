@@ -19,11 +19,39 @@ export type ParentClassAssignment = {
   class_groups?: Pick<ClassGroup, "id" | "name" | "code"> | null;
 };
 
+export type TeacherClassAssignment = {
+  id: string;
+  teacher_id: string | null;
+  class_id: string | null;
+  status: "ACTIVE" | "REMOVED";
+  created_at: string;
+  class_groups?: Pick<ClassGroup, "id" | "name" | "code"> | null;
+};
+
 type ParentClassAssignmentRow = Omit<ParentClassAssignment, "class_groups"> & {
   class_groups?: Pick<ClassGroup, "id" | "name" | "code"> | null | Array<Pick<ClassGroup, "id" | "name" | "code">>;
 };
 
+type TeacherClassAssignmentRow = Omit<TeacherClassAssignment, "class_groups"> & {
+  class_groups?:
+    | Pick<ClassGroup, "id" | "name" | "code">
+    | null
+    | Array<Pick<ClassGroup, "id" | "name" | "code">>;
+};
+
 const classGroupSelect = "id, name, code, created_by, created_at, updated_at";
+
+function normalizeClassGroup(
+  classGroup:
+    | Pick<ClassGroup, "id" | "name" | "code">
+    | null
+    | Array<Pick<ClassGroup, "id" | "name" | "code">>
+    | undefined
+): Pick<ClassGroup, "id" | "name" | "code"> | null {
+  return Array.isArray(classGroup)
+    ? (classGroup[0] ?? null)
+    : (classGroup ?? null);
+}
 
 export async function getClassGroups(): Promise<ClassGroup[]> {
   const { data, error } = await supabase
@@ -99,10 +127,66 @@ export async function getParentClassAssignments(): Promise<
 
   return (data ?? []).map((assignment: ParentClassAssignmentRow) => ({
     ...assignment,
-    class_groups: Array.isArray(assignment.class_groups)
-      ? (assignment.class_groups[0] ?? null)
-      : (assignment.class_groups ?? null),
+    class_groups: normalizeClassGroup(assignment.class_groups),
   }));
+}
+
+export async function getTeacherClassAssignments(): Promise<
+  TeacherClassAssignment[]
+> {
+  const { data, error } = await supabase
+    .from("teacher_class_assignments")
+    .select(
+      "id, teacher_id, class_id, status, created_at, class_groups(id, name, code)"
+    )
+    .eq("status", "ACTIVE")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    throw error;
+  }
+
+  return (data ?? []).map((assignment: TeacherClassAssignmentRow) => ({
+    ...assignment,
+    class_groups: normalizeClassGroup(assignment.class_groups),
+  }));
+}
+
+export async function assignTeacherToClass(input: {
+  teacherId: string;
+  classId: string;
+}): Promise<TeacherClassAssignment> {
+  const { data, error } = await supabase
+    .from("teacher_class_assignments")
+    .upsert(
+      {
+        class_id: input.classId,
+        status: "ACTIVE",
+        teacher_id: input.teacherId,
+      },
+      { onConflict: "teacher_id,class_id" }
+    )
+    .select("id, teacher_id, class_id, status, created_at")
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}
+
+export async function removeTeacherFromClass(input: {
+  assignmentId: string;
+}): Promise<void> {
+  const { error } = await supabase
+    .from("teacher_class_assignments")
+    .update({ status: "REMOVED" })
+    .eq("id", input.assignmentId);
+
+  if (error) {
+    throw error;
+  }
 }
 
 export async function assignParentToClass(input: {

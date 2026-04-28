@@ -90,6 +90,23 @@ function normalizeMessage(row: MessageRow): ChatMessage {
   };
 }
 
+function removeDuplicateClassGroupChats(chats: Chat[]): Chat[] {
+  const seenClassChatIds = new Set<string>();
+
+  return chats.filter((chat) => {
+    if (chat.chat_type !== "CLASS_GROUP_CHAT" || !chat.class_id) {
+      return true;
+    }
+
+    if (seenClassChatIds.has(chat.class_id)) {
+      return false;
+    }
+
+    seenClassChatIds.add(chat.class_id);
+    return true;
+  });
+}
+
 async function getCurrentUserId(): Promise<string> {
   const {
     data: { user },
@@ -147,6 +164,22 @@ async function getActiveParentIdsForClass(classId: string): Promise<string[]> {
     .filter((parentId): parentId is string => Boolean(parentId));
 }
 
+async function getActiveTeacherIdsForClass(classId: string): Promise<string[]> {
+  const { data, error } = await supabase
+    .from("teacher_class_assignments")
+    .select("teacher_id")
+    .eq("class_id", classId)
+    .eq("status", "ACTIVE");
+
+  if (error) {
+    throw error;
+  }
+
+  return (data ?? [])
+    .map((assignment) => assignment.teacher_id)
+    .filter((teacherId): teacherId is string => Boolean(teacherId));
+}
+
 export async function getMyChats(): Promise<Chat[]> {
   const { data, error } = await supabase
     .from("chats")
@@ -157,7 +190,9 @@ export async function getMyChats(): Promise<Chat[]> {
     throw error;
   }
 
-  return ((data ?? []) as ChatRow[]).map(normalizeChat);
+  return removeDuplicateClassGroupChats(
+    ((data ?? []) as ChatRow[]).map(normalizeChat)
+  );
 }
 
 export async function getChatById(chatId: string): Promise<Chat | null> {
@@ -172,6 +207,24 @@ export async function getChatById(chatId: string): Promise<Chat | null> {
   }
 
   return data ? normalizeChat(data as ChatRow) : null;
+}
+
+export async function getClassGroupChatForClass(
+  classId: string
+): Promise<Chat | null> {
+  const { data, error } = await supabase
+    .from("chats")
+    .select(chatSelect)
+    .eq("class_id", classId)
+    .eq("chat_type", "CLASS_GROUP_CHAT")
+    .order("created_at", { ascending: true })
+    .limit(1);
+
+  if (error) {
+    throw error;
+  }
+
+  return data?.[0] ? normalizeChat(data[0] as ChatRow) : null;
 }
 
 export async function getChatMessages(chatId: string): Promise<ChatMessage[]> {
@@ -234,8 +287,15 @@ async function insertMembers(
 
 export async function createClassGroupChat(classId: string): Promise<Chat> {
   const createdBy = await getCurrentUserId();
-  const [{ data: classGroup, error: classError }, ceos, directors, parentIds] =
-    await Promise.all([
+  const [
+    existingChat,
+    { data: classGroup, error: classError },
+    ceos,
+    directors,
+    parentIds,
+    teacherIds,
+  ] = await Promise.all([
+      getClassGroupChatForClass(classId),
       supabase
         .from("class_groups")
         .select("id, name, code")
@@ -244,10 +304,34 @@ export async function createClassGroupChat(classId: string): Promise<Chat> {
       getApprovedCeoProfiles(),
       getApprovedDirectorProfiles(),
       getActiveParentIdsForClass(classId),
+      getActiveTeacherIdsForClass(classId),
     ]);
 
   if (classError) {
     throw classError;
+  }
+
+  if (existingChat) {
+    await insertMembers(existingChat.id, [
+      ...ceos.map((profile) => ({
+        member_role: "CEO",
+        profile_id: profile.id,
+      })),
+      ...directors.map((profile) => ({
+        member_role: "DIRECTOR",
+        profile_id: profile.id,
+      })),
+      ...teacherIds.map((teacherId) => ({
+        member_role: "TEACHER",
+        profile_id: teacherId,
+      })),
+      ...parentIds.map((parentId) => ({
+        member_role: "PARENT",
+        profile_id: parentId,
+      })),
+    ]);
+
+    return (await getChatById(existingChat.id)) ?? existingChat;
   }
 
   const { data: chat, error } = await supabase
@@ -273,6 +357,10 @@ export async function createClassGroupChat(classId: string): Promise<Chat> {
     ...directors.map((profile) => ({
       member_role: "DIRECTOR",
       profile_id: profile.id,
+    })),
+    ...teacherIds.map((teacherId) => ({
+      member_role: "TEACHER",
+      profile_id: teacherId,
     })),
     ...parentIds.map((parentId) => ({
       member_role: "PARENT",

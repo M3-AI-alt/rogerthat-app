@@ -55,6 +55,14 @@ const reportTemplates = [
   },
 ] as const;
 
+const supportedAttachmentLabels = [
+  "PDF",
+  "Excel",
+  "Word",
+  "PowerPoint",
+  "Images",
+];
+
 function formatDate(value: string): string {
   return new Intl.DateTimeFormat("en", {
     dateStyle: "medium",
@@ -267,32 +275,48 @@ export default function ClassReportsPage(): ReactElement {
 
       {canCreateReport ? (
         <form
-          className="mt-8 grid gap-4 rounded-lg border border-slate-200 bg-white p-5 shadow-sm"
+          className="mt-8 grid gap-5 rounded-lg border border-slate-200 bg-white p-5 shadow-sm"
           onSubmit={handleCreateReport}
         >
-          <p className="text-base font-semibold text-slate-950">
-            Send daily report
-          </p>
+          <div>
+            <p className="text-base font-semibold text-slate-950">
+              Send daily report
+            </p>
+            <p className="mt-1 text-sm leading-6 text-slate-600">
+              Choose a template, write your update, and attach one class file if
+              needed.
+            </p>
+          </div>
           <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {reportTemplates.map((template) => (
               <button
-                className="min-h-11 rounded-lg border border-blue-100 bg-blue-50 px-3 text-left text-sm font-semibold text-blue-800 transition hover:-translate-y-0.5 hover:bg-blue-100 focus:outline-none focus:ring-4 focus:ring-blue-500/30"
+                className="min-h-12 rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-left text-sm font-semibold text-blue-800 transition hover:-translate-y-0.5 hover:bg-blue-100 focus:outline-none focus:ring-4 focus:ring-blue-500/30"
                 key={template.label}
                 onClick={() => setContent(template.value)}
                 type="button"
               >
-                {template.label}
+              {template.label}
               </button>
             ))}
           </div>
           <textarea
-            className="min-h-32 rounded-lg border border-slate-300 p-4 text-base leading-7 text-slate-950"
+            className="min-h-40 rounded-lg border border-slate-300 bg-slate-50 p-4 text-base leading-7 text-slate-950"
             onChange={(event) => setContent(event.target.value)}
             placeholder="Write today's class report or choose a template..."
             value={content}
           />
-          <label className="grid gap-2 text-sm font-medium text-slate-700">
-            Attach file optional
+          <div className="flex flex-wrap gap-2">
+            {supportedAttachmentLabels.map((label) => (
+              <span
+                className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700"
+                key={label}
+              >
+                {label}
+              </span>
+            ))}
+          </div>
+          <label className="grid gap-2 rounded-lg border border-dashed border-slate-300 bg-slate-50 p-4 text-sm font-medium text-slate-700">
+            Attach report file
             <input
               accept={reportAttachmentAccept}
               className="min-h-12 rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 file:mr-4 file:rounded-lg file:border-0 file:bg-slate-950 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white"
@@ -306,7 +330,7 @@ export default function ClassReportsPage(): ReactElement {
             </p>
           ) : null}
           <button
-            className="min-h-12 rounded-lg bg-slate-950 px-5 text-base font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-400"
+            className="min-h-12 rounded-lg bg-slate-950 px-5 text-base font-semibold text-white shadow-sm disabled:cursor-not-allowed disabled:bg-slate-400"
             disabled={isSending}
             type="submit"
           >
@@ -344,7 +368,7 @@ export default function ClassReportsPage(): ReactElement {
           ) : (
             reports.map((report) => (
               <article
-                className="rounded-lg border border-slate-200 p-4"
+                className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm"
                 key={report.id}
               >
                 <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">

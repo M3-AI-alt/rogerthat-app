@@ -160,7 +160,7 @@ export default function ChatsPage(): ReactElement {
             </p>
           ) : chats.length === 0 ? (
             <EmptyState
-              description="Supervised conversations will appear after the CEO creates class or private chats."
+              description="Supervised conversations assigned to your account will appear here."
               title="No conversations yet"
             />
           ) : (

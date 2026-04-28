@@ -2,6 +2,7 @@ export const ROUTES = {
   ceoDashboard: "/ceo/dashboard",
   ceoClasses: "/ceo/classes",
   ceoChats: "/ceo/chats",
+  ceoAssignTeachers: "/ceo/assign-teachers",
   ceoAssignParents: "/ceo/assign-parents",
   ceoUsers: "/ceo/users",
   directorDashboard: "/director/dashboard",

@@ -48,6 +48,29 @@ export async function getReportsForClass(
   }));
 }
 
+export async function getReportsByTeacher(
+  teacherId: string
+): Promise<ClassReport[]> {
+  const { data, error } = await supabase
+    .from("class_reports")
+    .select(
+      "id, class_id, teacher_id, content, created_at, profiles(full_name, email)"
+    )
+    .eq("teacher_id", teacherId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    throw error;
+  }
+
+  return (data ?? []).map((report: ClassReportRow) => ({
+    ...report,
+    profiles: Array.isArray(report.profiles)
+      ? (report.profiles[0] ?? null)
+      : (report.profiles ?? null),
+  }));
+}
+
 export async function createClassReport(
   classId: string,
   content: string

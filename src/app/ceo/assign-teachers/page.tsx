@@ -4,31 +4,30 @@ import { AppShell } from "@/components/layout/AppShell";
 import { PageNav } from "@/components/layout/PageNav";
 import { EmptyState } from "@/components/ui/EmptyState";
 import {
-  assignParentToClass,
+  assignTeacherToClass,
   getClassGroups,
-  getParentClassAssignments,
-  removeParentFromClass,
+  getTeacherClassAssignments,
+  removeTeacherFromClass,
   type ClassGroup,
-  type ParentClassAssignment,
+  type TeacherClassAssignment,
 } from "@/lib/classes";
 import type { UserProfile } from "@/lib/profile";
 import { ROUTES } from "@/lib/routes";
 import { supabase } from "@/lib/supabase/client";
 import { type FormEvent, type ReactElement, useEffect, useState } from "react";
 
-type ParentProfile = Pick<UserProfile, "id" | "full_name" | "email" | "phone">;
+type TeacherProfile = Pick<UserProfile, "id" | "full_name" | "email" | "phone">;
 
-function formatValue(value: string | null): string {
-  return value?.trim() || "Not provided";
+function getTeacherLabel(teacher: TeacherProfile): string {
+  return teacher.full_name?.trim() || teacher.email?.trim() || teacher.id;
 }
 
-export default function CeoAssignParentsPage(): ReactElement {
-  const [parents, setParents] = useState<ParentProfile[]>([]);
+export default function CeoAssignTeachersPage(): ReactElement {
+  const [teachers, setTeachers] = useState<TeacherProfile[]>([]);
   const [classes, setClasses] = useState<ClassGroup[]>([]);
-  const [assignments, setAssignments] = useState<ParentClassAssignment[]>([]);
-  const [selectedParentId, setSelectedParentId] = useState("");
+  const [assignments, setAssignments] = useState<TeacherClassAssignment[]>([]);
+  const [selectedTeacherId, setSelectedTeacherId] = useState("");
   const [selectedClassId, setSelectedClassId] = useState("");
-  const [childName, setChildName] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -41,53 +40,51 @@ export default function CeoAssignParentsPage(): ReactElement {
     setErrorMessage("");
     setIsLoading(true);
 
-    const parentsQuery = supabase
+    const teachersQuery = supabase
       .from("profiles")
       .select("id, full_name, email, phone")
-      .eq("role", "PARENT")
+      .eq("role", "TEACHER")
       .order("created_at", { ascending: false });
 
     try {
-      const [parentResult, classResult, assignmentResult] = await Promise.all([
-        parentsQuery,
+      const [teacherResult, classResult, assignmentResult] = await Promise.all([
+        teachersQuery,
         getClassGroups(),
-        getParentClassAssignments(),
+        getTeacherClassAssignments(),
       ]);
 
-      if (parentResult.error) {
-        throw parentResult.error;
+      if (teacherResult.error) {
+        throw teacherResult.error;
       }
 
-      setParents(parentResult.data ?? []);
+      setTeachers(teacherResult.data ?? []);
       setClasses(classResult);
       setAssignments(assignmentResult);
     } catch {
       setErrorMessage(
-        "Could not load assignment data. Please check your CEO access and try again."
+        "Could not load teacher assignments. Check your CEO access and try again."
       );
     } finally {
       setIsLoading(false);
     }
   }
 
-  async function handleAssignParent(event: FormEvent<HTMLFormElement>) {
+  async function handleAssignTeacher(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setErrorMessage("");
     setSuccessMessage("");
     setIsSaving(true);
 
     try {
-      await assignParentToClass({
-        childName,
+      await assignTeacherToClass({
         classId: selectedClassId,
-        parentId: selectedParentId,
+        teacherId: selectedTeacherId,
       });
-      setChildName("");
-      setSuccessMessage("Parent assigned to class.");
+      setSuccessMessage("Teacher assigned to class.");
       await loadAssignmentData();
     } catch {
       setErrorMessage(
-        "Could not assign parent to class. Check that a parent and class are selected."
+        "Could not assign teacher to class. Check that a teacher and class are selected."
       );
     } finally {
       setIsSaving(false);
@@ -100,19 +97,19 @@ export default function CeoAssignParentsPage(): ReactElement {
     setActiveAssignmentId(assignmentId);
 
     try {
-      await removeParentFromClass({ assignmentId });
-      setSuccessMessage("Parent removed from class.");
+      await removeTeacherFromClass({ assignmentId });
+      setSuccessMessage("Teacher removed from class.");
       await loadAssignmentData();
     } catch {
-      setErrorMessage("Could not remove this parent from the class.");
+      setErrorMessage("Could not remove this teacher from the class.");
     } finally {
       setActiveAssignmentId(null);
     }
   }
 
-  function getParentLabel(parentId: string | null): string {
-    const parent = parents.find((item) => item.id === parentId);
-    return parent?.full_name || parent?.email || "Unknown parent";
+  function getAssignmentTeacherLabel(teacherId: string | null): string {
+    const teacher = teachers.find((item) => item.id === teacherId);
+    return teacher ? getTeacherLabel(teacher) : "Unknown teacher";
   }
 
   useEffect(() => {
@@ -131,33 +128,33 @@ export default function CeoAssignParentsPage(): ReactElement {
           CEO / Owner
         </p>
         <h1 className="mt-3 text-3xl font-semibold text-slate-950">
-          Assign parents
+          Assign teachers
         </h1>
         <p className="mt-3 text-base leading-7 text-slate-600">
-          Connect parents to class reports and supervised class group chats.
+          Connect teachers to class reporting rooms and class group chats.
         </p>
       </section>
 
       <section className="mt-8 grid gap-4">
         <form
           className="grid gap-4 rounded-lg border border-slate-200 bg-white p-5 shadow-sm"
-          onSubmit={handleAssignParent}
+          onSubmit={handleAssignTeacher}
         >
           <p className="text-base font-semibold text-slate-950">
-            New class assignment
+            New teacher assignment
           </p>
           <label className="grid gap-2 text-sm font-medium text-slate-700">
-            Parent
+            Teacher
             <select
               className="min-h-12 rounded-lg border border-slate-300 bg-white px-4 text-base text-slate-950"
-              onChange={(event) => setSelectedParentId(event.target.value)}
+              onChange={(event) => setSelectedTeacherId(event.target.value)}
               required
-              value={selectedParentId}
+              value={selectedTeacherId}
             >
-              <option value="">Select parent</option>
-              {parents.map((parent) => (
-                <option key={parent.id} value={parent.id}>
-                  {parent.full_name || parent.email || parent.id}
+              <option value="">Select teacher</option>
+              {teachers.map((teacher) => (
+                <option key={teacher.id} value={teacher.id}>
+                  {getTeacherLabel(teacher)}
                 </option>
               ))}
             </select>
@@ -178,16 +175,6 @@ export default function CeoAssignParentsPage(): ReactElement {
               ))}
             </select>
           </label>
-          <label className="grid gap-2 text-sm font-medium text-slate-700">
-            Child name optional
-            <input
-              className="min-h-12 rounded-lg border border-slate-300 px-4 text-base text-slate-950"
-              onChange={(event) => setChildName(event.target.value)}
-              placeholder="Child name"
-              type="text"
-              value={childName}
-            />
-          </label>
 
           {errorMessage ? (
             <p className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm leading-6 text-red-700">
@@ -205,7 +192,7 @@ export default function CeoAssignParentsPage(): ReactElement {
             disabled={isSaving || isLoading}
             type="submit"
           >
-            {isSaving ? "Assigning..." : "Assign parent to class"}
+            {isSaving ? "Assigning..." : "Assign teacher to class"}
           </button>
         </form>
 
@@ -214,7 +201,7 @@ export default function CeoAssignParentsPage(): ReactElement {
             Current assignments
           </p>
           <h2 className="mt-1 text-xl font-semibold text-slate-950">
-            Parents and classes
+            Teachers and classes
           </h2>
           <div className="mt-5 grid gap-3">
             {isLoading ? (
@@ -223,8 +210,8 @@ export default function CeoAssignParentsPage(): ReactElement {
               <EmptyState
                 actionHref={ROUTES.ceoClasses}
                 actionLabel="Create or review classes"
-                description="Assign a parent after at least one class and one parent profile exist."
-                title="No parents assigned yet"
+                description="Assign a teacher after at least one class and one teacher profile exist."
+                title="No teachers assigned yet"
               />
             ) : (
               assignments.map((assignment) => (
@@ -233,14 +220,11 @@ export default function CeoAssignParentsPage(): ReactElement {
                   key={assignment.id}
                 >
                   <p className="text-base font-semibold text-slate-950">
-                    {getParentLabel(assignment.parent_id)}
+                    {getAssignmentTeacherLabel(assignment.teacher_id)}
                   </p>
                   <p className="mt-1 text-sm text-slate-600">
                     {assignment.class_groups?.code ?? "No code"} -{" "}
                     {assignment.class_groups?.name ?? "No class"}
-                  </p>
-                  <p className="mt-1 text-sm text-slate-600">
-                    Child: {formatValue(assignment.child_name)}
                   </p>
                   <button
                     className="mt-4 min-h-11 rounded-lg border border-red-200 bg-white px-4 text-sm font-semibold text-red-700 disabled:cursor-not-allowed disabled:text-slate-400"

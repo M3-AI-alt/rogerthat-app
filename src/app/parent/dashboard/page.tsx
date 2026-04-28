@@ -4,6 +4,7 @@ import { DashboardCard } from "@/components/dashboard/DashboardCard";
 import { AppShell } from "@/components/layout/AppShell";
 import { PageNav } from "@/components/layout/PageNav";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { getMyChats, type Chat } from "@/lib/chats";
 import {
   getParentClassAssignments,
   type ParentClassAssignment,
@@ -13,6 +14,7 @@ import { type ReactElement, useEffect, useState } from "react";
 
 export default function ParentDashboardPage(): ReactElement {
   const [assignments, setAssignments] = useState<ParentClassAssignment[]>([]);
+  const [chats, setChats] = useState<Chat[]>([]);
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
 
@@ -21,7 +23,12 @@ export default function ParentDashboardPage(): ReactElement {
     setIsLoading(true);
 
     try {
-      setAssignments(await getParentClassAssignments());
+      const [assignmentData, chatData] = await Promise.all([
+        getParentClassAssignments(),
+        getMyChats(),
+      ]);
+      setAssignments(assignmentData);
+      setChats(chatData);
     } catch {
       setErrorMessage("Could not load your assigned classes. Please try again.");
     } finally {
@@ -70,37 +77,102 @@ export default function ParentDashboardPage(): ReactElement {
               title="No classes assigned yet"
             />
           ) : (
-            assignments.map((assignment) => (
-              <div key={assignment.id}>
-                {assignment.class_id ? (
-                  <Link
-                    className="font-semibold text-slate-950 underline-offset-4 hover:underline"
-                    href={`/classes/${assignment.class_id}`}
+            <div className="grid gap-3">
+              {assignments.map((assignment) => {
+                const classChat = chats.find(
+                  (chat) =>
+                    chat.chat_type === "CLASS_GROUP_CHAT" &&
+                    chat.class_id === assignment.class_id
+                );
+
+                return (
+                  <article
+                    className="rounded-lg border border-slate-200 bg-slate-50 p-4"
+                    key={assignment.id}
                   >
-                    {assignment.class_groups?.name ?? "Assigned class"}
-                  </Link>
-                ) : (
-                  <p className="font-semibold text-slate-950">
-                    {assignment.class_groups?.name ?? "Assigned class"}
-                  </p>
-                )}
-                <p>{assignment.class_groups?.code ?? "No class code"}</p>
-                {assignment.child_name ? (
-                  <p>Child: {assignment.child_name}</p>
-                ) : null}
-              </div>
-            ))
+                    <p className="font-semibold text-slate-950">
+                      {assignment.class_groups?.name ?? "Assigned class"}
+                    </p>
+                    <p className="mt-1 text-sm text-slate-600">
+                      {assignment.class_groups?.code ?? "No class code"}
+                    </p>
+                    {assignment.child_name ? (
+                      <p className="mt-1 text-sm text-slate-600">
+                        Child: {assignment.child_name}
+                      </p>
+                    ) : null}
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {assignment.class_id ? (
+                        <Link
+                          className="inline-flex min-h-10 items-center rounded-lg bg-slate-950 px-4 text-sm font-semibold text-white"
+                          href={`/classes/${assignment.class_id}`}
+                        >
+                          Open reports
+                        </Link>
+                      ) : null}
+                      {classChat ? (
+                        <Link
+                          className="inline-flex min-h-10 items-center rounded-lg border border-blue-200 bg-blue-50 px-4 text-sm font-semibold text-blue-800"
+                          href={`/chats/${classChat.id}`}
+                        >
+                          Open chat
+                        </Link>
+                      ) : (
+                        <span className="inline-flex min-h-10 items-center rounded-lg border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-500">
+                          Chat not created yet
+                        </span>
+                      )}
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
           )}
         </DashboardCard>
         <DashboardCard label="Reports">
           <EmptyState
+            actionHref={
+              assignments.find((assignment) => assignment.class_id)?.class_id
+                ? `/classes/${
+                    assignments.find((assignment) => assignment.class_id)
+                      ?.class_id
+                  }`
+                : undefined
+            }
+            actionLabel={
+              assignments.some((assignment) => assignment.class_id)
+                ? "Open reports"
+                : undefined
+            }
             description="Reports will appear after your class is assigned and a teacher sends a daily report."
             title="No reports yet"
           />
         </DashboardCard>
         <DashboardCard label="Supervised chats">
-          Use My Chats to view supervised class and private chats. CEO and
-          Director supervision is visible inside each chat.
+          {chats.length === 0 ? (
+            <EmptyState
+              actionHref={assignments.length > 0 ? "/chats" : undefined}
+              actionLabel={assignments.length > 0 ? "Open chats" : undefined}
+              description={
+                assignments.length > 0
+                  ? "Your supervised class chat will appear here after the CEO opens it."
+                  : "Your account is active. Waiting for class assignment."
+              }
+              title="No conversations yet"
+            />
+          ) : (
+            <div className="grid gap-2">
+              {chats.map((chat) => (
+                <Link
+                  className="rounded-lg border border-slate-200 bg-slate-50 p-3 font-semibold text-slate-950"
+                  href={`/chats/${chat.id}`}
+                  key={chat.id}
+                >
+                  {chat.title || "Supervised chat"}
+                </Link>
+              ))}
+            </div>
+          )}
         </DashboardCard>
       </section>
     </AppShell>

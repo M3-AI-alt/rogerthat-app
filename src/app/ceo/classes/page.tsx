@@ -9,6 +9,7 @@ import {
   type ClassGroup,
 } from "@/lib/classes";
 import { ROUTES } from "@/lib/routes";
+import Link from "next/link";
 import { type FormEvent, type ReactElement, useEffect, useState } from "react";
 
 export default function CeoClassesPage(): ReactElement {
@@ -155,6 +156,26 @@ export default function CeoClassesPage(): ReactElement {
                   <p className="mt-2 inline-flex rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
                     {classGroup.code}
                   </p>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <Link
+                      className="inline-flex min-h-10 items-center rounded-lg border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700"
+                      href={ROUTES.ceoAssignTeachers}
+                    >
+                      Assign teacher
+                    </Link>
+                    <Link
+                      className="inline-flex min-h-10 items-center rounded-lg border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700"
+                      href={ROUTES.ceoAssignParents}
+                    >
+                      Assign parent
+                    </Link>
+                    <Link
+                      className="inline-flex min-h-10 items-center rounded-lg border border-blue-200 bg-blue-50 px-4 text-sm font-semibold text-blue-800"
+                      href={ROUTES.ceoChats}
+                    >
+                      Open chat
+                    </Link>
+                  </div>
                 </article>
               ))
             )}

@@ -28,6 +28,20 @@ function getChatTypeLabel(chat: Chat): string {
     : "Supervised private chat";
 }
 
+function getParticipantSummary(chat: Chat): string {
+  const members = chat.chat_members ?? [];
+  const counts = {
+    ceo: members.filter((member) => member.member_role === "CEO").length,
+    director: members.filter((member) => member.member_role === "DIRECTOR")
+      .length,
+    parent: members.filter((member) => member.member_role === "PARENT").length,
+    teacher: members.filter((member) => member.member_role === "TEACHER")
+      .length,
+  };
+
+  return `${counts.ceo} CEO, ${counts.director} Director, ${counts.teacher} Teacher, ${counts.parent} Parent`;
+}
+
 export default function CeoChatsPage(): ReactElement {
   const [chats, setChats] = useState<Chat[]>([]);
   const [classes, setClasses] = useState<ClassGroup[]>([]);
@@ -88,9 +102,11 @@ export default function CeoChatsPage(): ReactElement {
     setIsCreatingClassChat(true);
 
     try {
-      await createClassGroupChat(classChatClassId);
+      const chat = await createClassGroupChat(classChatClassId);
       setClassChatClassId("");
-      setSuccessMessage("Class group chat created with CEO supervision.");
+      setSuccessMessage(
+        `Class group chat is ready: ${chat.title || "Supervised chat"}.`
+      );
       await loadChatData();
     } catch {
       setErrorMessage(
@@ -195,11 +211,12 @@ export default function CeoChatsPage(): ReactElement {
         >
           <div>
             <p className="text-base font-semibold text-slate-950">
-              Create class group chat
+              Create/open class group chat
             </p>
             <p className="mt-1 text-sm leading-6 text-slate-600">
-              Adds CEO, Directors, and parents assigned to the selected class.
-              Teacher assignment will come later.
+              Adds CEO, Directors, assigned teacher, and assigned parents. If
+              the class chat already exists, RogerThat opens and updates it
+              instead of creating a duplicate.
             </p>
           </div>
           <label className="grid gap-2 text-sm font-medium text-slate-700">
@@ -223,7 +240,7 @@ export default function CeoChatsPage(): ReactElement {
             disabled={isCreatingClassChat || isLoading}
             type="submit"
           >
-            {isCreatingClassChat ? "Creating..." : "Create class group chat"}
+            {isCreatingClassChat ? "Opening..." : "Create/open class group chat"}
           </button>
         </form>
 
@@ -360,6 +377,9 @@ export default function CeoChatsPage(): ReactElement {
                       {chat.class_groups.code} - {chat.class_groups.name}
                     </p>
                   ) : null}
+                  <p className="mt-3 text-sm text-slate-600">
+                    {getParticipantSummary(chat)}
+                  </p>
                 </Link>
               ))
             )}
