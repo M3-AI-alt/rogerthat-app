@@ -152,19 +152,79 @@ function ChatListItem({
   );
 }
 
-function FileCard({ attachment }: { attachment: MessageAttachment }): ReactElement {
+function AttachmentCard({
+  attachment,
+}: {
+  attachment: MessageAttachment;
+}): ReactElement {
+  const href = attachment.download_url ?? attachment.file_url;
+
+  if (isImageAttachment(attachment)) {
+    return (
+      <a
+        className="group block overflow-hidden rounded-lg border border-slate-200 bg-white/90 shadow-sm transition hover:border-emerald-300"
+        href={href}
+        rel="noreferrer"
+        target="_blank"
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element -- Signed Supabase URLs are short-lived and not configured for next/image. */}
+        <img
+          alt={attachment.file_name}
+          className="max-h-72 w-full object-cover"
+          src={href}
+        />
+        <span className="flex items-center justify-between gap-3 px-3 py-2 text-xs text-slate-600">
+          <span className="truncate font-semibold">{attachment.file_name}</span>
+          <span className="shrink-0 rounded-full bg-emerald-50 px-2 py-1 font-semibold text-emerald-700">
+            Open
+          </span>
+        </span>
+      </a>
+    );
+  }
+
   return (
     <a
-      className="block rounded-lg border border-slate-200 bg-white/90 px-3 py-2 text-sm shadow-sm transition hover:border-emerald-300"
-      href={attachment.download_url ?? attachment.file_url}
+      className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white/90 px-3 py-2 text-sm shadow-sm transition hover:border-emerald-300"
+      href={href}
       rel="noreferrer"
       target="_blank"
     >
-      <span className="block break-all font-semibold text-slate-800">
-        {attachment.file_name}
+      <span className="min-w-0">
+        <span className="block truncate font-semibold text-slate-800">
+          {attachment.file_name}
+        </span>
+        <span className="mt-1 block text-xs font-medium text-slate-500">
+          {formatFileSize(attachment.file_size)}
+        </span>
       </span>
-      <span className="mt-1 block text-xs font-medium text-slate-500">
-        {formatFileSize(attachment.file_size)}
+      <span className="shrink-0 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+        Open
+      </span>
+    </a>
+  );
+}
+
+function FileCard({ attachment }: { attachment: MessageAttachment }): ReactElement {
+  const href = attachment.download_url ?? attachment.file_url;
+
+  return (
+    <a
+      className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white/90 px-3 py-2 text-sm shadow-sm transition hover:border-emerald-300"
+      href={href}
+      rel="noreferrer"
+      target="_blank"
+    >
+      <span className="min-w-0">
+        <span className="block truncate font-semibold text-slate-800">
+          {attachment.file_name}
+        </span>
+        <span className="mt-1 block text-xs font-medium text-slate-500">
+          {formatFileSize(attachment.file_size)}
+        </span>
+      </span>
+      <span className="shrink-0 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+        Open
       </span>
     </a>
   );
@@ -503,7 +563,10 @@ export default function ChatDetailPage(): ReactElement {
                       {messageAttachments.length > 0 ? (
                         <div className="mt-2 grid gap-2">
                           {messageAttachments.map((attachment) => (
-                            <FileCard attachment={attachment} key={attachment.id} />
+                            <AttachmentCard
+                              attachment={attachment}
+                              key={attachment.id}
+                            />
                           ))}
                         </div>
                       ) : null}
