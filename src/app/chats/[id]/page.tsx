@@ -295,6 +295,19 @@ export default function ChatDetailPage(): ReactElement {
           }, 2500);
         }
       )
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "message_attachments",
+        },
+        () => {
+          void loadMessages().catch(() => {
+            setErrorMessage("A file was added, but it could not be loaded.");
+          });
+        }
+      )
       .subscribe();
 
     return () => {
