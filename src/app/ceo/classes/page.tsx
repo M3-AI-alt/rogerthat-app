@@ -78,6 +78,20 @@ export default function CeoClassesPage(): ReactElement {
         <p className="mt-3 text-base leading-7 text-slate-600">
           Create class groups with unique codes such as BOH-A1.
         </p>
+        <div className="mt-5 flex flex-wrap gap-3">
+          <Link
+            className="inline-flex min-h-11 items-center rounded-lg bg-slate-950 px-4 text-sm font-semibold text-white"
+            href={ROUTES.ceoRoomMembers}
+          >
+            Manage Members
+          </Link>
+          <Link
+            className="inline-flex min-h-11 items-center rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-950"
+            href={ROUTES.ceoChats}
+          >
+            Private Chats
+          </Link>
+        </div>
       </section>
 
       <section className="mt-8 grid gap-4">
@@ -174,6 +188,12 @@ export default function CeoClassesPage(): ReactElement {
                       href={ROUTES.ceoChats}
                     >
                       Open chat
+                    </Link>
+                    <Link
+                      className="inline-flex min-h-10 items-center rounded-lg border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700"
+                      href={`${ROUTES.ceoRoomMembers}?classId=${classGroup.id}`}
+                    >
+                      Manage members
                     </Link>
                   </div>
                 </article>

@@ -149,6 +149,21 @@ async function getApprovedDirectorProfiles(): Promise<ChatMemberProfile[]> {
   return data ?? [];
 }
 
+export async function getRoomMemberProfiles(): Promise<ChatMemberProfile[]> {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id, full_name, email, role")
+    .in("role", ["CEO", "DIRECTOR", "TEACHER", "PARENT"])
+    .order("role", { ascending: true })
+    .order("full_name", { ascending: true });
+
+  if (error) {
+    throw error;
+  }
+
+  return (data ?? []) as ChatMemberProfile[];
+}
+
 async function getActiveParentIdsForClass(classId: string): Promise<string[]> {
   const { data, error } = await supabase
     .from("parent_class_assignments")
@@ -280,6 +295,30 @@ async function insertMembers(
     })),
     { onConflict: "chat_id,profile_id" }
   );
+
+  if (error) {
+    throw error;
+  }
+}
+
+export async function addChatMember(input: {
+  chatId: string;
+  profileId: string;
+  role: ChatProfileRole;
+}): Promise<void> {
+  await insertMembers(input.chatId, [
+    {
+      member_role: input.role,
+      profile_id: input.profileId,
+    },
+  ]);
+}
+
+export async function removeChatMember(memberId: string): Promise<void> {
+  const { error } = await supabase
+    .from("chat_members")
+    .delete()
+    .eq("id", memberId);
 
   if (error) {
     throw error;

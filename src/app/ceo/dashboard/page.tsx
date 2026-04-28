@@ -197,10 +197,10 @@ export default function CeoDashboardPage(): ReactElement {
               title="Assign parent to class"
             />
             <SetupChecklistItem
-              description="Open the message room for the class."
-              href={ROUTES.ceoChats}
+              description="Open the room and add CEO, directors, teachers, and parents."
+              href={ROUTES.ceoRoomMembers}
               isDone={chats.some((chat) => chat.chat_type === "CLASS_GROUP_CHAT")}
-              title="Create/open class room"
+              title="Manage room members"
             />
             <SetupChecklistItem
               description="Teacher opens the room and sends a message or report."
@@ -260,12 +260,20 @@ export default function CeoDashboardPage(): ReactElement {
                   );
 
                   return classRoom ? (
-                    <Link
-                      className="inline-flex min-h-10 items-center rounded-lg bg-slate-950 px-4 text-sm font-semibold text-white"
-                      href={`/chats/${classRoom.id}`}
-                    >
-                      Open Room
-                    </Link>
+                    <div className="flex flex-wrap gap-2">
+                      <Link
+                        className="inline-flex min-h-10 items-center rounded-lg bg-slate-950 px-4 text-sm font-semibold text-white"
+                        href={`/chats/${classRoom.id}`}
+                      >
+                        Open Room
+                      </Link>
+                      <Link
+                        className="inline-flex min-h-10 items-center rounded-lg border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700"
+                        href={`${ROUTES.ceoRoomMembers}?classId=${classGroup.id}`}
+                      >
+                        Manage Members
+                      </Link>
+                    </div>
                   ) : (
                     <Link
                       className="inline-flex min-h-10 items-center rounded-lg border border-blue-200 bg-blue-50 px-4 text-sm font-semibold text-blue-800"
