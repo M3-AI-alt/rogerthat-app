@@ -25,7 +25,15 @@ Run these in Supabase SQL Editor in order:
 3. `supabase/sql/003_classes_and_parent_assignments.sql`
 4. `supabase/sql/004_class_reports.sql`
 5. `supabase/sql/005_supervised_chats.sql`
-6. `supabase/sql/006_realtime_updates.sql`
+6. `supabase/sql/006_report_attachments.sql`
+7. `supabase/sql/006_realtime_updates.sql`
+
+## Supabase Storage Checklist
+
+- Confirm the `report-attachments` bucket exists.
+- Keep the bucket private.
+- Confirm teachers can upload report files after running `006_report_attachments.sql`.
+- Confirm parents can open files only from assigned classes.
 
 ## Test Login Checklist
 
@@ -61,7 +69,7 @@ Run these in Supabase SQL Editor in order:
 - Parent only sees assigned classes.
 - Chat members only see chats where they are members.
 - CEO sees all chats.
-- RLS is enabled on profiles, class groups, parent assignments, class reports, chats, chat members, and messages.
+- RLS is enabled on profiles, class groups, parent assignments, class reports, report attachments, chats, chat members, and messages.
 
 ## Demo Checklist
 

@@ -6,6 +6,13 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { getClassGroup, type ClassGroup } from "@/lib/classes";
 import { getCurrentUserProfile, type UserProfile } from "@/lib/profile";
 import {
+  getReportAttachments,
+  isSupportedReportAttachment,
+  reportAttachmentAccept,
+  uploadReportAttachment,
+  type ReportAttachment,
+} from "@/lib/report-attachments";
+import {
   createClassReport,
   getReportsForClass,
   type ClassReport,
@@ -19,6 +26,34 @@ import {
   useEffect,
   useState,
 } from "react";
+
+const reportTemplates = [
+  {
+    label: "Daily Performance Report",
+    value:
+      "Class:\nDate:\nToday's lesson:\nStudent progress:\nHomework:\nTeacher note:",
+  },
+  {
+    label: "Homework Report",
+    value:
+      "Class:\nDate:\nHomework assigned:\nDue date:\nInstructions:\nTeacher note:",
+  },
+  {
+    label: "Behavior Report",
+    value:
+      "Class:\nDate:\nClass behavior:\nParticipation:\nStrengths:\nTeacher note:",
+  },
+  {
+    label: "Speaking Progress Report",
+    value:
+      "Class:\nDate:\nSpeaking focus:\nPronunciation:\nConfidence:\nPractice at home:\nTeacher note:",
+  },
+  {
+    label: "General Teacher Feedback",
+    value:
+      "Class:\nDate:\nWhat went well:\nNeeds practice:\nNext step:\nTeacher note:",
+  },
+] as const;
 
 function formatDate(value: string): string {
   return new Intl.DateTimeFormat("en", {
@@ -35,13 +70,34 @@ function getTeacherName(report: ClassReport): string {
   );
 }
 
+function formatFileSize(fileSize: number | null): string {
+  if (!fileSize) {
+    return "File";
+  }
+
+  if (fileSize < 1024 * 1024) {
+    return `${Math.ceil(fileSize / 1024)} KB`;
+  }
+
+  return `${(fileSize / 1024 / 1024).toFixed(1)} MB`;
+}
+
+function getFileTypeLabel(attachment: ReportAttachment): string {
+  const extension = attachment.file_name.split(".").pop()?.toUpperCase();
+  return extension || attachment.file_type || "Attachment";
+}
+
 export default function ClassReportsPage(): ReactElement {
   const params = useParams<{ id: string }>();
   const classId = params.id;
   const [classGroup, setClassGroup] = useState<ClassGroup | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [reports, setReports] = useState<ClassReport[]>([]);
+  const [reportAttachments, setReportAttachments] = useState<
+    Record<string, ReportAttachment[]>
+  >({});
   const [content, setContent] = useState("");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -51,20 +107,32 @@ export default function ClassReportsPage(): ReactElement {
 
   const canCreateReport = profile?.role === "TEACHER";
 
+  const loadReportsWithAttachments = useCallback(async () => {
+    const reportData = await getReportsForClass(classId);
+    const attachmentEntries = await Promise.all(
+      reportData.map(async (report) => [
+        report.id,
+        await getReportAttachments(report.id),
+      ])
+    );
+
+    setReports(reportData);
+    setReportAttachments(Object.fromEntries(attachmentEntries));
+  }, [classId]);
+
   const loadClassRoom = useCallback(async () => {
     setErrorMessage("");
     setIsLoading(true);
 
     try {
-      const [classData, profileData, reportData] = await Promise.all([
+      const [classData, profileData] = await Promise.all([
         getClassGroup(classId),
         getCurrentUserProfile(),
-        getReportsForClass(classId),
       ]);
 
       setClassGroup(classData);
       setProfile(profileData);
-      setReports(reportData);
+      await loadReportsWithAttachments();
     } catch {
       setErrorMessage(
         "Could not load this class room. Make sure you have access to this class."
@@ -72,7 +140,7 @@ export default function ClassReportsPage(): ReactElement {
     } finally {
       setIsLoading(false);
     }
-  }, [classId]);
+  }, [classId, loadReportsWithAttachments]);
 
   async function handleCreateReport(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -81,17 +149,56 @@ export default function ClassReportsPage(): ReactElement {
     setIsSending(true);
 
     try {
-      await createClassReport(classId, content);
+      if (!content.trim() && !selectedFile) {
+        setErrorMessage("Add report text or choose a file before sending.");
+        return;
+      }
+
+      if (selectedFile && !isSupportedReportAttachment(selectedFile)) {
+        setErrorMessage(
+          "This file type is not supported. Choose PDF, Excel, image, PowerPoint, or Word."
+        );
+        return;
+      }
+
+      const report = await createClassReport(classId, content);
+
+      if (selectedFile) {
+        await uploadReportAttachment(selectedFile, report.id);
+      }
+
       setContent("");
-      setSuccessMessage("Report sent.");
-      setReports(await getReportsForClass(classId));
+      setSelectedFile(null);
+      setSuccessMessage(
+        selectedFile ? "Report and attachment sent." : "Report sent."
+      );
+      await loadReportsWithAttachments();
     } catch {
       setErrorMessage(
-        "Could not send report. Only teacher accounts can create class reports."
+        "Could not send report. Check your teacher access and try again."
       );
     } finally {
       setIsSending(false);
     }
+  }
+
+  function handleFileChange(file: File | undefined) {
+    setErrorMessage("");
+
+    if (!file) {
+      setSelectedFile(null);
+      return;
+    }
+
+    if (!isSupportedReportAttachment(file)) {
+      setSelectedFile(null);
+      setErrorMessage(
+        "This file type is not supported. Choose PDF, Excel, image, PowerPoint, or Word."
+      );
+      return;
+    }
+
+    setSelectedFile(file);
   }
 
   useEffect(() => {
@@ -116,7 +223,7 @@ export default function ClassReportsPage(): ReactElement {
         () => {
           setNewReportCount((currentCount) => currentCount + 1);
           setShowNewReportHint(true);
-          void getReportsForClass(classId).then(setReports).catch(() => {
+          void loadReportsWithAttachments().catch(() => {
             setErrorMessage("A new report arrived, but it could not be loaded.");
           });
 
@@ -130,7 +237,7 @@ export default function ClassReportsPage(): ReactElement {
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [classId]);
+  }, [classId, loadReportsWithAttachments]);
 
   return (
     <AppShell>
@@ -166,19 +273,44 @@ export default function ClassReportsPage(): ReactElement {
           <p className="text-base font-semibold text-slate-950">
             Send daily report
           </p>
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {reportTemplates.map((template) => (
+              <button
+                className="min-h-11 rounded-lg border border-blue-100 bg-blue-50 px-3 text-left text-sm font-semibold text-blue-800 transition hover:-translate-y-0.5 hover:bg-blue-100 focus:outline-none focus:ring-4 focus:ring-blue-500/30"
+                key={template.label}
+                onClick={() => setContent(template.value)}
+                type="button"
+              >
+                {template.label}
+              </button>
+            ))}
+          </div>
           <textarea
             className="min-h-32 rounded-lg border border-slate-300 p-4 text-base leading-7 text-slate-950"
             onChange={(event) => setContent(event.target.value)}
-            placeholder="Write today's class report..."
-            required
+            placeholder="Write today's class report or choose a template..."
             value={content}
           />
+          <label className="grid gap-2 text-sm font-medium text-slate-700">
+            Attach file optional
+            <input
+              accept={reportAttachmentAccept}
+              className="min-h-12 rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 file:mr-4 file:rounded-lg file:border-0 file:bg-slate-950 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white"
+              onChange={(event) => handleFileChange(event.target.files?.[0])}
+              type="file"
+            />
+          </label>
+          {selectedFile ? (
+            <p className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm font-semibold text-blue-800">
+              Selected file: {selectedFile.name}
+            </p>
+          ) : null}
           <button
             className="min-h-12 rounded-lg bg-slate-950 px-5 text-base font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-400"
             disabled={isSending}
             type="submit"
           >
-            {isSending ? "Sending..." : "Send report"}
+            {isSending ? "Sending report..." : "Send report"}
           </button>
         </form>
       ) : null}
@@ -226,6 +358,27 @@ export default function ClassReportsPage(): ReactElement {
                 <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-slate-700">
                   {report.content || "No report content."}
                 </p>
+                {(reportAttachments[report.id] ?? []).length > 0 ? (
+                  <div className="mt-4 grid gap-2">
+                    {(reportAttachments[report.id] ?? []).map((attachment) => (
+                      <a
+                        className="flex min-h-12 flex-col rounded-lg border border-blue-100 bg-blue-50 p-3 text-sm transition hover:-translate-y-0.5 hover:bg-blue-100 focus:outline-none focus:ring-4 focus:ring-blue-500/30 sm:flex-row sm:items-center sm:justify-between"
+                        href={attachment.download_url ?? "#"}
+                        key={attachment.id}
+                        rel="noreferrer"
+                        target="_blank"
+                      >
+                        <span className="font-semibold text-blue-900">
+                          {attachment.file_name}
+                        </span>
+                        <span className="mt-1 text-xs font-semibold text-blue-700 sm:mt-0">
+                          {getFileTypeLabel(attachment)} ·{" "}
+                          {formatFileSize(attachment.file_size)}
+                        </span>
+                      </a>
+                    ))}
+                  </div>
+                ) : null}
               </article>
             ))
           )}
