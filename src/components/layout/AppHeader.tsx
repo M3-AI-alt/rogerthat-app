@@ -44,10 +44,10 @@ export function AppHeader(): ReactElement {
           <span className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-[#071b45] px-3 py-2 text-white shadow-md shadow-blue-950/10 transition duration-200 group-hover:-translate-y-0.5 group-hover:scale-[1.01]">
             <Image
               alt="Ben Oxford Hub logo"
-              className="h-8 w-8 object-contain"
-              height={32}
+              className="h-10 w-10 object-contain"
+              height={40}
               src="/ben-oxford-logo.png"
-              width={32}
+              width={40}
             />
             <span className="block text-xl font-semibold leading-5 tracking-normal">
               RogerThat

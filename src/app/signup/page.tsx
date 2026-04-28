@@ -124,11 +124,11 @@ export default function SignupPage(): ReactElement {
           <div className="inline-flex min-h-14 items-center gap-3 rounded-lg bg-[#071b45] px-4 py-3 text-white shadow-xl shadow-blue-950/20">
             <Image
               alt="Ben Oxford Hub logo"
-              className="h-11 w-11 object-contain"
-              height={44}
+              className="h-14 w-14 object-contain"
+              height={56}
               priority
               src="/ben-oxford-logo.png"
-              width={44}
+              width={56}
             />
             <span className="text-2xl font-semibold leading-none tracking-normal">
               RogerThat
