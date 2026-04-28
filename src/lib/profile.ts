@@ -42,11 +42,15 @@ export async function getCurrentUserProfile(): Promise<UserProfile | null> {
 }
 
 export function getDashboardRoute(profile: UserProfile): AppRoute | null {
-  if (profile.approval_status !== "APPROVED") {
+  if (!profile.role) {
     return null;
   }
 
-  if (!profile.role) {
+  if (profile.role === "PARENT") {
+    return ROUTES.parentDashboard;
+  }
+
+  if (profile.approval_status !== "APPROVED") {
     return null;
   }
 

@@ -61,22 +61,12 @@ export default function LoginPage(): ReactElement {
         return;
       }
 
-      if (profile.approval_status === "PENDING") {
-        setStatusMessage(
-          "Your account request is waiting for CEO approval."
-        );
-        return;
-      }
-
-      if (profile.approval_status === "REJECTED") {
-        setErrorMessage("Your account request was rejected.");
-        return;
-      }
-
       const dashboardRoute = getDashboardRoute(profile);
 
       if (!dashboardRoute) {
-        setErrorMessage("Your profile role is missing or incomplete.");
+        setErrorMessage(
+          "Your staff profile is not active yet. Ask the CEO to approve or complete your profile."
+        );
         return;
       }
 

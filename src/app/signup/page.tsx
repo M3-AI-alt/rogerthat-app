@@ -79,7 +79,7 @@ export default function SignupPage(): ReactElement {
 
       if (profileError) {
         setErrorMessage(
-          "Your account was created, but the profile could not be created. Make sure the profiles SQL has been run in Supabase."
+          "Your account was created, but the parent profile could not be created. Make sure the profiles SQL has been run in Supabase."
         );
         return;
       }
@@ -87,11 +87,11 @@ export default function SignupPage(): ReactElement {
 
     if (data.user && !data.session) {
       setSuccessMessage(
-        "Your account request has been created and is pending CEO approval. Check your email to confirm your account before login."
+        "Your parent account has been created. Check your email to confirm your account before login. Class access will be assigned by the CEO later."
       );
     } else {
       setSuccessMessage(
-        "Your account request has been created and is pending CEO approval."
+        "Your parent account has been created. Your account is active, and class access will be assigned by the CEO later."
       );
     }
 
@@ -111,8 +111,8 @@ export default function SignupPage(): ReactElement {
         </p>
         <h1 className="mt-3 text-3xl font-semibold text-slate-950">Sign up</h1>
         <p className="mt-3 text-base leading-7 text-slate-600">
-          Parent signup creates an access request. CEO approval will be added in
-          a later step.
+          Parent signup creates an active parent account. The CEO assigns class
+          access later.
         </p>
         <p className="mt-3 text-sm leading-6 text-slate-600">
           Use a real email inbox, because Supabase will send a confirmation
@@ -220,8 +220,8 @@ export default function SignupPage(): ReactElement {
           </label>
 
           <p className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
-            Your account will wait for CEO approval. The CEO approval screen
-            will be added later.
+            Your app account can log in after email confirmation. Class access
+            stays pending until the CEO assigns your class.
           </p>
 
           {errorMessage ? (

@@ -1,9 +1,9 @@
 "use client";
 
 import { AppShell } from "@/components/layout/AppShell";
+import type { ApprovalStatus, UserProfile } from "@/lib/profile";
 import { supabase } from "@/lib/supabase/client";
-import type { ApprovalStatus, ProfileRole, UserProfile } from "@/lib/profile";
-import { type ReactElement, useEffect, useState } from "react";
+import { type ReactElement, useEffect, useMemo, useState } from "react";
 
 type ProfileRow = Pick<
   UserProfile,
@@ -24,8 +24,42 @@ function formatProfileValue(value: string | null): string {
   return value?.trim() || "Not provided";
 }
 
-function StatusBadge({ status }: { status: ApprovalStatus | null }): ReactElement {
-  const label = status ?? "UNKNOWN";
+function getOnlineStatus(profileId: string): "online" | "offline" {
+  return profileId.charCodeAt(0) % 2 === 0 ? "online" : "offline";
+}
+
+function getParentAssignmentLabel(status: ApprovalStatus | null): string {
+  if (status === "APPROVED") {
+    return "Class assigned";
+  }
+
+  if (status === "REJECTED") {
+    return "Class access removed";
+  }
+
+  return "Waiting for class assignment";
+}
+
+function OnlineBadge({ status }: { status: "online" | "offline" }): ReactElement {
+  const colorClass =
+    status === "online"
+      ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+      : "border-slate-200 bg-slate-50 text-slate-600";
+
+  return (
+    <span
+      className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold capitalize ${colorClass}`}
+    >
+      {status}
+    </span>
+  );
+}
+
+function AssignmentBadge({
+  status,
+}: {
+  status: ApprovalStatus | null;
+}): ReactElement {
   const colorClass =
     status === "APPROVED"
       ? "border-emerald-200 bg-emerald-50 text-emerald-700"
@@ -37,76 +71,80 @@ function StatusBadge({ status }: { status: ApprovalStatus | null }): ReactElemen
     <span
       className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${colorClass}`}
     >
-      {label}
+      {getParentAssignmentLabel(status)}
     </span>
   );
 }
 
+function MemberCard({ profile }: { profile: ProfileRow }): ReactElement {
+  const onlineStatus = getOnlineStatus(profile.id);
+
+  return (
+    <article className="rounded-lg border border-slate-200 p-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <p className="text-base font-semibold text-slate-950">
+            {formatProfileValue(profile.full_name)}
+          </p>
+          <p className="mt-1 text-sm text-slate-600">
+            {formatProfileValue(profile.email)}
+          </p>
+          <p className="mt-1 text-sm text-slate-600">
+            {formatProfileValue(profile.phone)}
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
+            {profile.role ?? "NO ROLE"}
+          </span>
+          <OnlineBadge status={onlineStatus} />
+          <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
+            Admin: {profile.has_admin_access ? "Yes" : "No"}
+          </span>
+        </div>
+      </div>
+      {profile.role === "PARENT" ? (
+        <div className="mt-3">
+          <AssignmentBadge status={profile.approval_status} />
+        </div>
+      ) : null}
+    </article>
+  );
+}
+
 export default function CeoUsersPage(): ReactElement {
-  const [pendingParents, setPendingParents] = useState<ProfileRow[]>([]);
-  const [approvedUsers, setApprovedUsers] = useState<ProfileRow[]>([]);
+  const [profiles, setProfiles] = useState<ProfileRow[]>([]);
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const [activeProfileId, setActiveProfileId] = useState<string | null>(null);
+
+  const newParents = useMemo(
+    () =>
+      profiles.filter(
+        (profile) =>
+          profile.role === "PARENT" && profile.approval_status === "PENDING"
+      ),
+    [profiles]
+  );
 
   async function loadProfiles() {
     setErrorMessage("");
     setIsLoading(true);
 
-    const [pendingResult, approvedResult] = await Promise.all([
-      supabase
-        .from("profiles")
-        .select(profileSelect)
-        .eq("role", "PARENT" satisfies ProfileRole)
-        .eq("approval_status", "PENDING" satisfies ApprovalStatus)
-        .order("created_at", { ascending: true }),
-      supabase
-        .from("profiles")
-        .select(profileSelect)
-        .eq("approval_status", "APPROVED" satisfies ApprovalStatus)
-        .order("created_at", { ascending: false }),
-    ]);
+    const { data, error } = await supabase
+      .from("profiles")
+      .select(profileSelect)
+      .order("created_at", { ascending: false });
 
     setIsLoading(false);
 
-    if (pendingResult.error || approvedResult.error) {
+    if (error) {
       setErrorMessage(
         "Could not load profiles. Make sure you are logged in as an approved CEO and the CEO profile policies SQL has been run."
       );
       return;
     }
 
-    setPendingParents(pendingResult.data ?? []);
-    setApprovedUsers(approvedResult.data ?? []);
-  }
-
-  async function updateParentApproval(
-    profileId: string,
-    approvalStatus: Extract<ApprovalStatus, "APPROVED" | "REJECTED">
-  ) {
-    setErrorMessage("");
-    setActiveProfileId(profileId);
-
-    const { error } = await supabase
-      .from("profiles")
-      .update({
-        approval_status: approvalStatus,
-        has_admin_access: false,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", profileId)
-      .eq("role", "PARENT");
-
-    setActiveProfileId(null);
-
-    if (error) {
-      setErrorMessage(
-        "Could not update this parent request. Make sure your CEO profile is approved and the CEO profile policies SQL has been run."
-      );
-      return;
-    }
-
-    await loadProfiles();
+    setProfiles(data ?? []);
   }
 
   useEffect(() => {
@@ -127,7 +165,7 @@ export default function CeoUsersPage(): ReactElement {
           User management
         </h1>
         <p className="mt-3 text-base leading-7 text-slate-600">
-          Review parent access requests and monitor approved users.
+          View all app members and track parent class assignment status.
         </p>
       </section>
 
@@ -139,107 +177,42 @@ export default function CeoUsersPage(): ReactElement {
 
       <section className="mt-8 grid gap-4">
         <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-sm font-medium text-slate-500">
-                Pending parent requests
-              </p>
-              <h2 className="mt-1 text-xl font-semibold text-slate-950">
-                Parents waiting for approval
-              </h2>
-            </div>
-            <StatusBadge status="PENDING" />
-          </div>
-
+          <p className="text-sm font-medium text-slate-500">All members</p>
+          <h2 className="mt-1 text-xl font-semibold text-slate-950">
+            CEO, Directors, Teachers, and Parents
+          </h2>
+          <p className="mt-2 text-sm leading-6 text-slate-600">
+            Online/offline is a placeholder until real presence tracking is
+            added.
+          </p>
           <div className="mt-5 grid gap-3">
             {isLoading ? (
-              <p className="text-sm text-slate-600">Loading requests...</p>
-            ) : pendingParents.length === 0 ? (
-              <p className="text-sm text-slate-600">
-                No parent requests are pending.
-              </p>
+              <p className="text-sm text-slate-600">Loading members...</p>
+            ) : profiles.length === 0 ? (
+              <p className="text-sm text-slate-600">No profiles found.</p>
             ) : (
-              pendingParents.map((profile) => (
-                <article
-                  className="grid gap-4 rounded-lg border border-slate-200 p-4"
-                  key={profile.id}
-                >
-                  <div>
-                    <p className="text-base font-semibold text-slate-950">
-                      {formatProfileValue(profile.full_name)}
-                    </p>
-                    <p className="mt-1 text-sm text-slate-600">
-                      {formatProfileValue(profile.email)}
-                    </p>
-                    <p className="mt-1 text-sm text-slate-600">
-                      {formatProfileValue(profile.phone)}
-                    </p>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <button
-                      className="min-h-11 rounded-lg bg-emerald-600 px-4 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-300"
-                      disabled={activeProfileId === profile.id}
-                      onClick={() =>
-                        void updateParentApproval(profile.id, "APPROVED")
-                      }
-                      type="button"
-                    >
-                      Approve
-                    </button>
-                    <button
-                      className="min-h-11 rounded-lg border border-red-200 bg-white px-4 text-sm font-semibold text-red-700 disabled:cursor-not-allowed disabled:text-slate-400"
-                      disabled={activeProfileId === profile.id}
-                      onClick={() =>
-                        void updateParentApproval(profile.id, "REJECTED")
-                      }
-                      type="button"
-                    >
-                      Reject
-                    </button>
-                  </div>
-                </article>
+              profiles.map((profile) => (
+                <MemberCard key={profile.id} profile={profile} />
               ))
             )}
           </div>
         </div>
 
         <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="text-sm font-medium text-slate-500">Approved users</p>
+          <p className="text-sm font-medium text-slate-500">New parents</p>
           <h2 className="mt-1 text-xl font-semibold text-slate-950">
-            Active approved accounts
+            Waiting for class assignment
           </h2>
           <div className="mt-5 grid gap-3">
             {isLoading ? (
-              <p className="text-sm text-slate-600">Loading users...</p>
-            ) : approvedUsers.length === 0 ? (
+              <p className="text-sm text-slate-600">Loading parents...</p>
+            ) : newParents.length === 0 ? (
               <p className="text-sm text-slate-600">
-                No approved profiles found.
+                No new parents are waiting for class assignment.
               </p>
             ) : (
-              approvedUsers.map((profile) => (
-                <article
-                  className="rounded-lg border border-slate-200 p-4"
-                  key={profile.id}
-                >
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                    <div>
-                      <p className="text-base font-semibold text-slate-950">
-                        {formatProfileValue(profile.full_name)}
-                      </p>
-                      <p className="mt-1 text-sm text-slate-600">
-                        {formatProfileValue(profile.email)}
-                      </p>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
-                        {profile.role ?? "NO ROLE"}
-                      </span>
-                      <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
-                        Admin: {profile.has_admin_access ? "Yes" : "No"}
-                      </span>
-                    </div>
-                  </div>
-                </article>
+              newParents.map((profile) => (
+                <MemberCard key={profile.id} profile={profile} />
               ))
             )}
           </div>
@@ -269,7 +242,8 @@ export default function CeoUsersPage(): ReactElement {
             </button>
           </div>
           <p className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
-            Staff account creation will be added in next step.
+            Staff account creation and class assignment will be added in next
+            steps.
           </p>
         </div>
       </section>

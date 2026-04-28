@@ -25,6 +25,9 @@ export default function ParentDashboardPage(): ReactElement {
       </section>
 
       <section className="mt-8 grid gap-4">
+        <DashboardCard label="Class assignment status">
+          Your account is active. Waiting for CEO to assign your class.
+        </DashboardCard>
         <DashboardCard label="Latest reports" value={latestReports.length}>
           {latestReports.map((report) => (
             <p key={report.id}>{report.content}</p>

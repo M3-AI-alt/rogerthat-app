@@ -5,6 +5,7 @@ create table if not exists public.profiles (
   phone text,
   role text check (role in ('CEO', 'DIRECTOR', 'TEACHER', 'PARENT')),
   has_admin_access boolean default false,
+  -- This status is for class access / assignment planning, not app login access.
   approval_status text check (
     approval_status in ('PENDING', 'APPROVED', 'REJECTED')
   ) default 'PENDING',
@@ -64,7 +65,8 @@ to authenticated
 using ((select auth.uid()) = id);
 
 drop policy if exists "Users can insert their own pending parent profile" on public.profiles;
-create policy "Users can insert their own pending parent profile"
+drop policy if exists "Users can insert their own parent profile pending class assignment" on public.profiles;
+create policy "Users can insert their own parent profile pending class assignment"
 on public.profiles
 for insert
 to authenticated
