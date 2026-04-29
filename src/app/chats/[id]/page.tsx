@@ -43,6 +43,20 @@ import {
 } from "react";
 
 const imageAttachmentAccept = ".png,.jpg,.jpeg,.webp";
+const emojiOptions = [
+  "😀",
+  "😊",
+  "👍",
+  "👏",
+  "❤️",
+  "🙏",
+  "🎉",
+  "⭐",
+  "📌",
+  "✅",
+  "📚",
+  "📝",
+] as const;
 
 function getProfileName(profile?: {
   full_name: string | null;
@@ -57,6 +71,22 @@ function getMemberName(member: ChatMember): string {
 
 function getSenderName(message: ChatMessage): string {
   return getProfileName(message.profiles);
+}
+
+function getInitials(name: string): string {
+  const parts = name
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+
+  if (parts.length === 0) {
+    return "M";
+  }
+
+  return parts
+    .slice(0, 2)
+    .map((part) => part.charAt(0).toUpperCase())
+    .join("");
 }
 
 function getReportSenderLabel(message: ChatMessage): string {
@@ -176,6 +206,27 @@ function formatTime(value: string): string {
   }).format(new Date(value));
 }
 
+function formatDateLabel(value: string): string {
+  const messageDate = new Date(value);
+  const today = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(today.getDate() - 1);
+
+  if (messageDate.toDateString() === today.toDateString()) {
+    return "Today";
+  }
+
+  if (messageDate.toDateString() === yesterday.toDateString()) {
+    return "Yesterday";
+  }
+
+  return new Intl.DateTimeFormat("en", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  }).format(messageDate);
+}
+
 function formatFileSize(size: number | null): string {
   if (!size) {
     return "File";
@@ -196,6 +247,30 @@ function isImageAttachment(attachment: MessageAttachment): boolean {
       fileName.endsWith(extension)
     )
   );
+}
+
+function getFileIcon(attachment: MessageAttachment): string {
+  const fileName = attachment.file_name.toLowerCase();
+
+  if (fileName.endsWith(".pdf")) {
+    return "PDF";
+  }
+
+  if ([".doc", ".docx"].some((extension) => fileName.endsWith(extension))) {
+    return "DOC";
+  }
+
+  if (
+    [".xls", ".xlsx", ".csv"].some((extension) => fileName.endsWith(extension))
+  ) {
+    return "XLS";
+  }
+
+  if ([".ppt", ".pptx"].some((extension) => fileName.endsWith(extension))) {
+    return "PPT";
+  }
+
+  return "FILE";
 }
 
 function getChatInitial(chat: Chat): string {
@@ -322,7 +397,7 @@ function AttachmentCard({
   if (isImageAttachment(attachment)) {
     return (
       <a
-        className="group block max-w-full overflow-hidden rounded-lg border border-slate-200 bg-white/90 shadow-sm transition hover:border-emerald-300"
+        className="group block max-w-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:border-emerald-300"
         href={href}
         rel="noreferrer"
         target="_blank"
@@ -335,7 +410,7 @@ function AttachmentCard({
         />
         <span className="flex items-center justify-between gap-3 px-3 py-2 text-xs text-slate-600">
           <span className="truncate font-semibold">{attachment.file_name}</span>
-          <span className="shrink-0 rounded-full bg-emerald-50 px-2 py-1 font-semibold text-emerald-700">
+          <span className="shrink-0 rounded-full bg-emerald-50 px-3 py-1 font-semibold text-emerald-700">
             Open
           </span>
         </span>
@@ -345,12 +420,15 @@ function AttachmentCard({
 
   return (
     <a
-      className="flex min-w-0 items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white/90 px-3 py-2 text-sm shadow-sm transition hover:border-emerald-300"
+      className="flex min-w-0 items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm shadow-sm transition hover:border-emerald-300"
       href={href}
       rel="noreferrer"
       target="_blank"
     >
-      <span className="min-w-0">
+      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-slate-900 text-[10px] font-black text-white">
+        {getFileIcon(attachment)}
+      </span>
+      <span className="min-w-0 flex-1">
         <span className="block truncate font-semibold text-slate-800">
           {attachment.file_name}
         </span>
@@ -358,7 +436,7 @@ function AttachmentCard({
           {formatFileSize(attachment.file_size)}
         </span>
       </span>
-      <span className="shrink-0 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+      <span className="shrink-0 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
         Open
       </span>
     </a>
@@ -569,6 +647,7 @@ export default function ChatDetailPage(): ReactElement {
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const [isInfoOpen, setIsInfoOpen] = useState(false);
+  const [isEmojiOpen, setIsEmojiOpen] = useState(false);
   const [notificationNotice, setNotificationNotice] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const imageInputRef = useRef<HTMLInputElement | null>(null);
@@ -609,6 +688,11 @@ export default function ChatDetailPage(): ReactElement {
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
+  }
+
+  function handleAddEmoji(emoji: string) {
+    setContent((currentContent) => `${currentContent}${emoji}`);
+    setIsEmojiOpen(false);
   }
 
   const markChatAsRead = useCallback(
@@ -910,8 +994,8 @@ export default function ChatDetailPage(): ReactElement {
           </div>
         </aside>
 
-        <section className="flex h-[100dvh] min-w-0 flex-col overflow-hidden bg-[#efeae2]">
-          <header className="flex min-h-14 shrink-0 items-center justify-between gap-2 border-b border-slate-200 bg-[#f0f2f5] px-3 sm:min-h-16 sm:gap-3 sm:px-4">
+        <section className="flex h-[100dvh] min-w-0 flex-col overflow-hidden bg-[#f7f1e8]">
+          <header className="flex min-h-14 shrink-0 items-center justify-between gap-2 border-b border-slate-200 bg-white/95 px-3 shadow-sm sm:min-h-16 sm:gap-3 sm:px-4">
             <div className="flex min-w-0 items-center gap-3">
               <Link
                 className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white text-lg font-semibold text-slate-700 lg:hidden"
@@ -919,6 +1003,9 @@ export default function ChatDetailPage(): ReactElement {
               >
                 ←
               </Link>
+              <div className="hidden h-10 w-10 shrink-0 place-items-center rounded-full bg-emerald-600 text-sm font-black text-white sm:grid">
+                {chat ? getInitials(getChatTitle(chat)) : "R"}
+              </div>
               <div className="min-w-0">
                 <p className="truncate text-sm font-semibold text-slate-950 sm:text-base">
                   {getChatTitle(chat)}
@@ -930,7 +1017,7 @@ export default function ChatDetailPage(): ReactElement {
               </div>
             </div>
             <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-              <span className="rounded-full bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-600 sm:px-3 sm:text-xs">
+              <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700 ring-1 ring-emerald-100 sm:px-3 sm:text-xs">
                 {getChatTypeLabel(chat)}
               </span>
               <button
@@ -958,7 +1045,7 @@ export default function ChatDetailPage(): ReactElement {
             </p>
           ) : null}
 
-          <div className="min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain px-2.5 py-3 scroll-smooth sm:px-6 sm:py-4">
+          <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.10),transparent_30%),linear-gradient(135deg,rgba(255,255,255,0.34)_25%,transparent_25%),linear-gradient(225deg,rgba(255,255,255,0.25)_25%,transparent_25%)] bg-[length:auto,28px_28px,28px_28px] px-2.5 py-3 scroll-smooth sm:px-6 sm:py-4">
             {isLoading ? (
               <p className="text-sm text-slate-600">Loading messages...</p>
             ) : messages.length === 0 ? (
@@ -967,68 +1054,77 @@ export default function ChatDetailPage(): ReactElement {
                 title="No messages yet"
               />
             ) : (
-              messages.map((message) => {
+              messages.map((message, messageIndex) => {
                 const isOwnMessage = message.sender_id === profile?.id;
                 const isReport = isReportMessage(message);
                 const messageAttachments = attachmentsByMessage[message.id] ?? [];
+                const senderName = getSenderName(message);
+                const previousMessage = messages[messageIndex - 1];
+                const shouldShowDate =
+                  !previousMessage ||
+                  new Date(previousMessage.created_at).toDateString() !==
+                    new Date(message.created_at).toDateString();
 
                 return (
-                  <article
-                    className={`flex ${isOwnMessage ? "justify-end" : "justify-start"}`}
-                    id={`message-${message.id}`}
-                    key={message.id}
-                  >
-                    <div
-                      className={`max-w-[92%] overflow-hidden rounded-lg px-3 py-2 text-sm shadow-sm sm:max-w-[70%] ${
-                        isOwnMessage
-                          ? "rounded-br-sm bg-[#d9fdd3]"
-                          : "rounded-bl-sm bg-white"
+                  <div key={message.id}>
+                    {shouldShowDate ? (
+                      <div className="my-2 flex justify-center">
+                        <span className="rounded-full bg-white/90 px-3 py-1 text-[11px] font-semibold uppercase text-slate-500 shadow-sm ring-1 ring-slate-200">
+                          {formatDateLabel(message.created_at)}
+                        </span>
+                      </div>
+                    ) : null}
+                    <article
+                      className={`flex items-end gap-2 ${
+                        isOwnMessage ? "justify-end" : "justify-start"
                       }`}
+                      id={`message-${message.id}`}
                     >
-                      <div className="mb-1 flex flex-wrap items-center gap-2">
-                        {isReport ? (
-                          <>
-                            <span className="font-semibold text-slate-800">
-                              {getReportSenderLabel(message)}
-                            </span>
-                            <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-semibold uppercase text-blue-800">
+                      {!isOwnMessage ? (
+                        <div className="mb-1 hidden h-8 w-8 shrink-0 place-items-center rounded-full bg-slate-800 text-[11px] font-black text-white sm:grid">
+                          {getInitials(senderName)}
+                        </div>
+                      ) : null}
+                      <div
+                        className={`relative max-w-[92%] overflow-hidden rounded-2xl px-3.5 py-2.5 text-sm shadow-sm ring-1 sm:max-w-[70%] ${
+                          isOwnMessage
+                            ? "rounded-br-md bg-[#d9fdd3] ring-emerald-200"
+                            : "rounded-bl-md bg-white ring-slate-200"
+                        } ${isReport ? "border-l-4 border-blue-500" : ""}`}
+                      >
+                        <div className="mb-1 flex flex-wrap items-center gap-2">
+                          <span className="font-semibold text-slate-900">
+                            {isReport ? getReportSenderLabel(message) : senderName}
+                          </span>
+                          {isReport ? (
+                            <span className="rounded-full bg-blue-600 px-2 py-0.5 text-[10px] font-semibold uppercase text-white">
                               Report
                             </span>
-                          </>
-                        ) : (
-                          <>
-                            <span className="font-semibold text-slate-800">
-                              {getSenderName(message)}
-                            </span>
+                          ) : (
                             <span className="rounded-full bg-black/5 px-2 py-0.5 text-[10px] font-semibold uppercase text-slate-600">
                               {getRoleLabel(message.profiles?.role)}
                             </span>
-                          </>
-                        )}
-                        {isReport ? (
-                          <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-semibold uppercase text-blue-800">
-                            {getRoleLabel(message.profiles?.role)}
-                          </span>
-                        ) : null}
-                      </div>
-                      <p className="whitespace-pre-wrap text-[15px] leading-6">
-                        {getMessageText(message)}
-                      </p>
-                      {messageAttachments.length > 0 ? (
-                        <div className="mt-2 grid gap-2">
-                          {messageAttachments.map((attachment) => (
-                            <AttachmentCard
-                              attachment={attachment}
-                              key={attachment.id}
-                            />
-                          ))}
+                          )}
                         </div>
-                      ) : null}
-                      <p className="mt-1 text-right text-[11px] text-slate-500">
-                        {formatTime(message.created_at)}
-                      </p>
-                    </div>
-                  </article>
+                        <p className="whitespace-pre-wrap break-words text-[15px] leading-6 text-slate-950">
+                          {getMessageText(message)}
+                        </p>
+                        {messageAttachments.length > 0 ? (
+                          <div className="mt-2 grid gap-2">
+                            {messageAttachments.map((attachment) => (
+                              <AttachmentCard
+                                attachment={attachment}
+                                key={attachment.id}
+                              />
+                            ))}
+                          </div>
+                        ) : null}
+                        <p className="mt-1 text-right text-[11px] font-medium text-slate-500">
+                          {formatTime(message.created_at)}
+                        </p>
+                      </div>
+                    </article>
+                  </div>
                 );
               })
             )}
@@ -1036,103 +1132,119 @@ export default function ChatDetailPage(): ReactElement {
 
           {canSendMessage ? (
             <form
-              className="shrink-0 border-t border-slate-200 bg-[#f0f2f5] p-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] sm:p-3"
+              className="relative shrink-0 border-t border-slate-200 bg-white/95 p-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] shadow-[0_-8px_24px_rgba(15,23,42,0.08)] backdrop-blur sm:p-3"
               onSubmit={handleSendMessage}
             >
-            {selectedFile ? (
-              <div className="mb-2 flex items-center justify-between gap-2 rounded-lg border border-emerald-200 bg-white px-3 py-2 text-sm text-slate-700">
-                <span className="truncate font-medium">
-                  {selectedFile.name} · {formatFileSize(selectedFile.size)}
-                </span>
-                <button
-                  className="shrink-0 font-semibold text-emerald-700"
-                  onClick={clearSelectedFile}
-                  type="button"
-                >
-                  Remove
-                </button>
-              </div>
-            ) : null}
-            <div className="grid gap-2 sm:flex sm:items-end">
-              <div className="flex items-center gap-2 sm:contents">
-                <button
-                  aria-label="Emoji placeholder"
-                  className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white text-xl text-slate-600 shadow-sm transition hover:bg-slate-50"
-                  title="Emoji placeholder"
-                  type="button"
-                >
-                  ☺
-                </button>
-                <label
-                  className="grid h-11 w-11 shrink-0 cursor-pointer place-items-center rounded-full bg-white text-[11px] font-bold text-slate-600 shadow-sm transition hover:bg-slate-50"
-                  title="Upload image"
-                >
-                  <span aria-hidden="true">IMG</span>
-                  <span className="sr-only">Upload image</span>
-                  <input
-                    accept={imageAttachmentAccept}
-                    className="sr-only"
-                    onChange={handleFileChange}
-                    ref={imageInputRef}
-                    type="file"
-                  />
-                </label>
-                <label
-                  className="grid h-11 w-11 shrink-0 cursor-pointer place-items-center rounded-full bg-white text-[10px] font-bold text-slate-600 shadow-sm transition hover:bg-slate-50"
-                  title="Upload file"
-                >
-                  <span aria-hidden="true">FILE</span>
-                  <span className="sr-only">Upload file</span>
-                  <input
-                    accept={messageAttachmentAccept}
-                    className="sr-only"
-                    onChange={handleFileChange}
-                    ref={fileInputRef}
-                    type="file"
-                  />
-                </label>
-                <button
-                  aria-pressed={messageType === "REPORT"}
-                  className={`h-11 shrink-0 rounded-full px-3 text-xs font-semibold shadow-sm transition ${
-                    messageType === "REPORT"
-                      ? "bg-blue-600 text-white"
-                      : "bg-white text-slate-600 hover:bg-slate-50"
-                  }`}
-                  onClick={() =>
-                    setMessageType((current) =>
-                      current === "REPORT" ? "CHAT" : "REPORT"
-                    )
-                  }
-                  title="Toggle report message"
-                  type="button"
-                >
-                  Report
-                </button>
-              </div>
-              <div className="flex min-w-0 items-end gap-2 sm:flex-1">
-                <div className="flex min-w-0 flex-1 items-end rounded-2xl bg-white px-3 py-2 shadow-sm">
-                  <textarea
-                    className="max-h-24 min-h-7 flex-1 resize-none bg-transparent text-[15px] outline-none sm:max-h-28"
-                    onChange={(event) => setContent(event.target.value)}
-                    onKeyDown={handleComposerKeyDown}
-                    placeholder={
-                      messageType === "REPORT"
-                        ? "Write a report..."
-                        : "Type a message"
-                    }
-                    rows={1}
-                    value={content}
-                  />
+              {isEmojiOpen ? (
+                <div className="absolute bottom-[calc(100%+0.5rem)] left-3 z-20 grid w-[min(22rem,calc(100vw-1.5rem))] grid-cols-6 gap-1 rounded-2xl border border-slate-200 bg-white p-3 shadow-2xl">
+                  {emojiOptions.map((emoji) => (
+                    <button
+                      className="grid h-10 w-10 place-items-center rounded-xl text-xl transition hover:bg-emerald-50"
+                      key={emoji}
+                      onClick={() => handleAddEmoji(emoji)}
+                      type="button"
+                    >
+                      {emoji}
+                    </button>
+                  ))}
                 </div>
-                <button
-                  className="h-11 shrink-0 rounded-full bg-emerald-600 px-4 text-sm font-semibold text-white shadow-sm disabled:bg-slate-400 sm:px-5"
-                  disabled={isSending || (!content.trim() && !selectedFile)}
-                  type="submit"
-                >
-                  {isSending ? "..." : "Send"}
-                </button>
+              ) : null}
+              {selectedFile ? (
+                <div className="mb-2 flex items-center justify-between gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-slate-700">
+                  <span className="truncate font-medium">
+                    {selectedFile.name} · {formatFileSize(selectedFile.size)}
+                  </span>
+                  <button
+                    className="shrink-0 rounded-full bg-white px-3 py-1 text-xs font-bold text-emerald-700"
+                    onClick={clearSelectedFile}
+                    type="button"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ) : null}
+              <div className="grid gap-2 sm:flex sm:items-end">
+                <div className="flex items-center gap-2 sm:contents">
+                  <button
+                    aria-expanded={isEmojiOpen}
+                    aria-label="Open emoji picker"
+                    className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white text-xl text-slate-600 shadow-sm ring-1 ring-slate-200 transition hover:bg-emerald-50"
+                    onClick={() => setIsEmojiOpen((current) => !current)}
+                    title="Emoji"
+                    type="button"
+                  >
+                    🙂
+                  </button>
+                  <label
+                    className="grid h-11 w-11 shrink-0 cursor-pointer place-items-center rounded-full bg-white text-[11px] font-bold text-slate-600 shadow-sm ring-1 ring-slate-200 transition hover:bg-emerald-50"
+                    title="Upload image"
+                  >
+                    <span aria-hidden="true">🖼</span>
+                    <span className="sr-only">Upload image</span>
+                    <input
+                      accept={imageAttachmentAccept}
+                      className="sr-only"
+                      onChange={handleFileChange}
+                      ref={imageInputRef}
+                      type="file"
+                    />
+                  </label>
+                  <label
+                    className="grid h-11 w-11 shrink-0 cursor-pointer place-items-center rounded-full bg-white text-base font-bold text-slate-600 shadow-sm ring-1 ring-slate-200 transition hover:bg-emerald-50"
+                    title="Upload file"
+                  >
+                    <span aria-hidden="true">📎</span>
+                    <span className="sr-only">Upload file</span>
+                    <input
+                      accept={messageAttachmentAccept}
+                      className="sr-only"
+                      onChange={handleFileChange}
+                      ref={fileInputRef}
+                      type="file"
+                    />
+                  </label>
+                  <button
+                    aria-pressed={messageType === "REPORT"}
+                    className={`h-11 shrink-0 rounded-full px-4 text-xs font-semibold shadow-sm transition ${
+                      messageType === "REPORT"
+                        ? "bg-blue-600 text-white"
+                        : "bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-blue-50"
+                    }`}
+                    onClick={() =>
+                      setMessageType((current) =>
+                        current === "REPORT" ? "CHAT" : "REPORT"
+                      )
+                    }
+                    title="Toggle report message"
+                    type="button"
+                  >
+                    Report
+                  </button>
+                </div>
+                <div className="flex min-w-0 items-end gap-2 sm:flex-1">
+                  <div className="flex min-w-0 flex-1 items-end rounded-2xl bg-slate-50 px-4 py-2 shadow-inner ring-1 ring-slate-200 focus-within:bg-white focus-within:ring-emerald-200">
+                    <textarea
+                      className="max-h-24 min-h-7 flex-1 resize-none bg-transparent text-[15px] outline-none placeholder:text-slate-400 sm:max-h-28"
+                      onChange={(event) => setContent(event.target.value)}
+                      onKeyDown={handleComposerKeyDown}
+                      placeholder={
+                        messageType === "REPORT"
+                          ? "Write a report..."
+                          : "Type a message"
+                      }
+                      rows={1}
+                      value={content}
+                    />
+                  </div>
+                  <button
+                    className="h-11 shrink-0 rounded-full bg-emerald-600 px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 disabled:bg-slate-400 sm:px-6"
+                    disabled={isSending || (!content.trim() && !selectedFile)}
+                    type="submit"
+                  >
+                    {isSending ? "..." : "Send"}
+                  </button>
+                </div>
               </div>
-            </div>
             </form>
           ) : (
             <div className="shrink-0 border-t border-slate-200 bg-[#f0f2f5] p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
