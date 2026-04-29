@@ -541,3 +541,126 @@ export async function createSupervisedPrivateChat(
 
   return (await getChatById(chat.id)) ?? normalizeChat(chat as ChatRow);
 }
+
+function getPrivateChatTitle(
+  currentProfile: ChatMemberProfile,
+  targetProfile: ChatMemberProfile
+): string {
+  const currentName =
+    currentProfile.full_name?.trim() || currentProfile.email?.trim() || "Member";
+  const targetName =
+    targetProfile.full_name?.trim() || targetProfile.email?.trim() || "Member";
+
+  return `${currentName} and ${targetName}`;
+}
+
+function getProfileRole(profile: ChatMemberProfile): ChatProfileRole | null {
+  return profile.role;
+}
+
+function getProfileRoleForMember(profile: ChatMemberProfile): string {
+  return profile.role ?? "MEMBER";
+}
+
+async function getProfileById(
+  profileId: string
+): Promise<ChatMemberProfile | null> {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id, full_name, email, role")
+    .eq("id", profileId)
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}
+
+export async function createOrOpenDirectPrivateChat(
+  targetProfileId: string
+): Promise<Chat> {
+  const currentUserId = await getCurrentUserId();
+
+  if (currentUserId === targetProfileId) {
+    throw new Error("Choose another user to start a private chat.");
+  }
+
+  const [currentProfile, targetProfile, chats, ceos] = await Promise.all([
+    getProfileById(currentUserId),
+    getProfileById(targetProfileId),
+    getMyChats(),
+    getApprovedCeoProfiles(),
+  ]);
+
+  if (!currentProfile || !targetProfile) {
+    throw new Error("Could not find this user.");
+  }
+
+  const existingChat = chats.find((chat) => {
+    if (chat.chat_type !== "SUPERVISED_PRIVATE_CHAT") {
+      return false;
+    }
+
+    const memberIds = new Set(
+      (chat.chat_members ?? [])
+        .map((member) => member.profile_id)
+        .filter((profileId): profileId is string => Boolean(profileId))
+    );
+
+    return memberIds.has(currentUserId) && memberIds.has(targetProfileId);
+  });
+
+  if (existingChat) {
+    return existingChat;
+  }
+
+  const currentRole = getProfileRole(currentProfile);
+  const targetRole = getProfileRole(targetProfile);
+  const teacherId =
+    currentRole === "TEACHER"
+      ? currentProfile.id
+      : targetRole === "TEACHER"
+        ? targetProfile.id
+        : null;
+  const parentId =
+    currentRole === "PARENT"
+      ? currentProfile.id
+      : targetRole === "PARENT"
+        ? targetProfile.id
+        : null;
+
+  const { data: chat, error } = await supabase
+    .from("chats")
+    .insert({
+      chat_type: "SUPERVISED_PRIVATE_CHAT",
+      created_by: currentUserId,
+      parent_id: parentId,
+      teacher_id: teacherId,
+      title: getPrivateChatTitle(currentProfile, targetProfile),
+    })
+    .select(chatSelect)
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
+  await insertMembers(chat.id, [
+    ...ceos.map((profile) => ({
+      member_role: "CEO",
+      profile_id: profile.id,
+    })),
+    {
+      member_role: getProfileRoleForMember(currentProfile),
+      profile_id: currentProfile.id,
+    },
+    {
+      member_role: getProfileRoleForMember(targetProfile),
+      profile_id: targetProfile.id,
+    },
+  ]);
+
+  return (await getChatById(chat.id)) ?? normalizeChat(chat as ChatRow);
+}

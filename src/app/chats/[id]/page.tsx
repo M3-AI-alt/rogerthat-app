@@ -2,6 +2,7 @@
 
 import { EmptyState } from "@/components/ui/EmptyState";
 import {
+  createOrOpenDirectPrivateChat,
   getChatById,
   getChatMessages,
   getMyChats,
@@ -27,9 +28,10 @@ import {
   type MessageAttachment,
 } from "@/lib/message-attachments";
 import { getCurrentUserProfile, type UserProfile } from "@/lib/profile";
+import { ROUTES } from "@/lib/routes";
 import { supabase } from "@/lib/supabase/client";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import {
   type ChangeEvent,
   type FormEvent,
@@ -178,6 +180,39 @@ function getRoleLabel(role: string | null | undefined): string {
   }
 
   return role.charAt(0) + role.slice(1).toLowerCase();
+}
+
+function getMemberActionHint(
+  currentProfile: UserProfile | null,
+  member: ChatMember
+): string {
+  if (!currentProfile || !member.profile_id || member.profile_id === currentProfile.id) {
+    return "This is you";
+  }
+
+  if (currentProfile.role === "CEO" || currentProfile.role === "DIRECTOR") {
+    return "Send message";
+  }
+
+  if (currentProfile.role === "TEACHER") {
+    if (member.member_role === "PARENT") {
+      return "Message assigned parent";
+    }
+
+    return "Send message";
+  }
+
+  if (currentProfile.role === "PARENT") {
+    if (member.member_role === "TEACHER") {
+      return "Message teacher";
+    }
+
+    if (member.member_role === "CEO" || member.member_role === "DIRECTOR") {
+      return "Message school";
+    }
+  }
+
+  return "School rules apply";
 }
 
 function isReportMessage(message: ChatMessage): boolean {
@@ -470,17 +505,30 @@ function FileCard({ attachment }: { attachment: MessageAttachment }): ReactEleme
 
 function ChatInfoPanel({
   chat,
+  currentProfile,
   onClose,
+  onStartPrivateChat,
   reportMessages,
   sharedFiles,
   sharedImages,
 }: {
   chat: Chat | null;
+  currentProfile: UserProfile | null;
   onClose?: () => void;
+  onStartPrivateChat: (member: ChatMember) => void;
   reportMessages: ChatMessage[];
   sharedFiles: MessageAttachment[];
   sharedImages: MessageAttachment[];
 }): ReactElement {
+  const [activeMemberId, setActiveMemberId] = useState<string | null>(null);
+  const activeMember = (chat?.chat_members ?? []).find(
+    (member) => member.id === activeMemberId
+  );
+  const canMessageActiveMember =
+    !!activeMember?.profile_id &&
+    !!currentProfile &&
+    activeMember.profile_id !== currentProfile.id;
+
   return (
     <div className="flex h-full flex-col bg-white">
       <div className="border-b border-slate-200 bg-[#f0f2f5] px-4 py-4">
@@ -526,20 +574,77 @@ function ChatInfoPanel({
               <p className="text-sm text-slate-500">No participants loaded.</p>
             ) : (
               (chat?.chat_members ?? []).map((member) => (
-                <div
-                  className="rounded-lg border border-slate-200 p-3"
+                <button
+                  className="group relative rounded-xl border border-slate-200 bg-white p-3 text-left transition hover:border-emerald-300 hover:bg-emerald-50/60"
                   key={member.id}
+                  onClick={() =>
+                    setActiveMemberId((currentId) =>
+                      currentId === member.id ? null : member.id
+                    )
+                  }
+                  onContextMenu={(event) => {
+                    event.preventDefault();
+                    setActiveMemberId(member.id);
+                  }}
+                  type="button"
                 >
-                  <p className="text-sm font-semibold text-slate-900">
-                    {getMemberName(member)}
+                  <div className="flex items-center gap-3">
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-emerald-600 text-sm font-bold text-white">
+                      {getInitials(getMemberName(member))}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-semibold text-slate-900">
+                        {getMemberName(member)}
+                      </span>
+                      <span className="mt-1 block text-xs uppercase text-slate-500">
+                        {getRoleLabel(member.member_role)}
+                      </span>
+                    </span>
+                    <span className="text-lg text-slate-300 transition group-hover:text-emerald-600">
+                      ...
+                    </span>
+                  </div>
+                  <p className="mt-2 text-xs font-medium text-slate-500">
+                    {getMemberActionHint(currentProfile, member)}
                   </p>
-                  <p className="mt-1 text-xs uppercase text-slate-500">
-                    {getRoleLabel(member.member_role)}
-                  </p>
-                </div>
+                </button>
               ))
             )}
           </div>
+
+          {activeMember ? (
+            <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3 shadow-sm">
+              <p className="text-sm font-semibold text-slate-950">
+                {getMemberName(activeMember)}
+              </p>
+              <div className="mt-3 grid gap-2">
+                <button
+                  className="min-h-10 rounded-lg bg-emerald-600 px-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-300"
+                  disabled={!canMessageActiveMember}
+                  onClick={() => onStartPrivateChat(activeMember)}
+                  type="button"
+                >
+                  Send message
+                </button>
+                {currentProfile?.role === "CEO" && chat?.class_id ? (
+                  <Link
+                    className="inline-flex min-h-10 items-center justify-center rounded-lg border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-800"
+                    href={`${ROUTES.ceoRoomMembers}?classId=${chat.class_id}`}
+                    onClick={onClose}
+                  >
+                    Manage room members
+                  </Link>
+                ) : null}
+                <button
+                  className="min-h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-600"
+                  onClick={() => setActiveMemberId(null)}
+                  type="button"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          ) : null}
         </section>
 
         <section>
@@ -625,6 +730,7 @@ function ChatInfoPanel({
 
 export default function ChatDetailPage(): ReactElement {
   const params = useParams<{ id: string }>();
+  const router = useRouter();
   const chatId = params.id;
   const [chats, setChats] = useState<Chat[]>([]);
   const [chat, setChat] = useState<Chat | null>(null);
@@ -693,6 +799,24 @@ export default function ChatDetailPage(): ReactElement {
   function handleAddEmoji(emoji: string) {
     setContent((currentContent) => `${currentContent}${emoji}`);
     setIsEmojiOpen(false);
+  }
+
+  async function handleStartPrivateChat(member: ChatMember) {
+    if (!member.profile_id) {
+      return;
+    }
+
+    setErrorMessage("");
+
+    try {
+      const privateChat = await createOrOpenDirectPrivateChat(member.profile_id);
+      setIsInfoOpen(false);
+      router.push(`/chats/${privateChat.id}`);
+    } catch {
+      setErrorMessage(
+        "Could not start this private chat. School communication rules may not allow this connection yet."
+      );
+    }
   }
 
   const markChatAsRead = useCallback(
@@ -1258,6 +1382,8 @@ export default function ChatDetailPage(): ReactElement {
         <aside className="hidden border-l border-slate-200 bg-white lg:block">
           <ChatInfoPanel
             chat={chat}
+            currentProfile={profile}
+            onStartPrivateChat={(member) => void handleStartPrivateChat(member)}
             reportMessages={reportMessages}
             sharedFiles={sharedFiles}
             sharedImages={sharedImages}
@@ -1276,7 +1402,9 @@ export default function ChatDetailPage(): ReactElement {
           <aside className="absolute right-0 top-0 h-full w-[min(24rem,92vw)] shadow-2xl">
             <ChatInfoPanel
               chat={chat}
+              currentProfile={profile}
               onClose={() => setIsInfoOpen(false)}
+              onStartPrivateChat={(member) => void handleStartPrivateChat(member)}
               reportMessages={reportMessages}
               sharedFiles={sharedFiles}
               sharedImages={sharedImages}
