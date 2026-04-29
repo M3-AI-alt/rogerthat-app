@@ -210,6 +210,20 @@ export default function CeoChatsPage(): ReactElement {
         <p className="mt-3 text-base leading-7 text-slate-600">
           Create class rooms and private chats for school communication.
         </p>
+        <div className="mt-5 flex flex-wrap gap-3">
+          <Link
+            className="inline-flex min-h-11 items-center rounded-lg bg-slate-950 px-4 text-sm font-semibold text-white"
+            href={ROUTES.privateChatsNew}
+          >
+            Start Private Chat
+          </Link>
+          <Link
+            className="inline-flex min-h-11 items-center rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-950"
+            href={ROUTES.chats}
+          >
+            Open Chat List
+          </Link>
+        </div>
       </section>
 
       <section className="mt-8 grid gap-4">

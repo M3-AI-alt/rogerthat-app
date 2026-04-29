@@ -258,6 +258,28 @@ export async function getChatMessages(chatId: string): Promise<ChatMessage[]> {
   return ((data ?? []) as MessageRow[]).map(normalizeMessage);
 }
 
+async function getPrivateChatForMembers(input: {
+  classId: string;
+  parentId: string;
+  teacherId: string;
+}): Promise<Chat | null> {
+  const { data, error } = await supabase
+    .from("chats")
+    .select(chatSelect)
+    .eq("class_id", input.classId)
+    .eq("chat_type", "SUPERVISED_PRIVATE_CHAT")
+    .eq("parent_id", input.parentId)
+    .eq("teacher_id", input.teacherId)
+    .order("created_at", { ascending: true })
+    .limit(1);
+
+  if (error) {
+    throw error;
+  }
+
+  return data?.[0] ? normalizeChat(data[0] as ChatRow) : null;
+}
+
 export async function sendMessage(
   chatId: string,
   content: string,
@@ -454,17 +476,36 @@ export async function createSupervisedPrivateChat(
   directorIds: string[]
 ): Promise<Chat> {
   const createdBy = await getCurrentUserId();
-  const [{ data: classGroup, error: classError }, ceos] = await Promise.all([
-    supabase
-      .from("class_groups")
-      .select("id, name, code")
-      .eq("id", classId)
-      .single(),
-    getApprovedCeoProfiles(),
-  ]);
+  const [existingChat, { data: classGroup, error: classError }, ceos] =
+    await Promise.all([
+      getPrivateChatForMembers({ classId, parentId, teacherId }),
+      supabase
+        .from("class_groups")
+        .select("id, name, code")
+        .eq("id", classId)
+        .single(),
+      getApprovedCeoProfiles(),
+    ]);
 
   if (classError) {
     throw classError;
+  }
+
+  if (existingChat) {
+    await insertMembers(existingChat.id, [
+      ...ceos.map((profile) => ({
+        member_role: "CEO",
+        profile_id: profile.id,
+      })),
+      ...directorIds.map((directorId) => ({
+        member_role: "DIRECTOR",
+        profile_id: directorId,
+      })),
+      { member_role: "TEACHER", profile_id: teacherId },
+      { member_role: "PARENT", profile_id: parentId },
+    ]);
+
+    return (await getChatById(existingChat.id)) ?? existingChat;
   }
 
   const { data: chat, error } = await supabase

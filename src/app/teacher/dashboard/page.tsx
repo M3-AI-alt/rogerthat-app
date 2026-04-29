@@ -148,9 +148,9 @@ export default function TeacherDashboardPage(): ReactElement {
         )}
         <Link
           className="inline-flex min-h-12 items-center justify-center rounded-lg border border-slate-300 bg-white px-5 text-base font-semibold text-slate-950 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-blue-200 hover:text-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-500/30 active:scale-[0.98]"
-          href="/teacher/dashboard"
+          href="/private-chats/new"
         >
-          Refresh Dashboard
+          Start Private Chat
         </Link>
       </section>
 
@@ -210,9 +210,9 @@ export default function TeacherDashboardPage(): ReactElement {
           ) : chats.filter((chat) => chat.chat_type === "SUPERVISED_PRIVATE_CHAT")
               .length === 0 ? (
             <EmptyState
-              actionHref="/chats"
-              actionLabel="Open chats"
-              description="Private chats with parents will appear here."
+              actionHref="/private-chats/new"
+              actionLabel="Start private chat"
+              description="Start a private chat with a parent from one of your rooms."
               title="No private chats yet"
             />
           ) : (

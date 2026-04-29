@@ -66,6 +66,12 @@ export default function ParentDashboardPage(): ReactElement {
         >
           My Rooms & Chats
         </Link>
+        <Link
+          className="inline-flex min-h-12 items-center justify-center rounded-lg border border-slate-300 bg-white px-5 text-base font-semibold text-slate-950"
+          href="/private-chats/new"
+        >
+          Start Private Chat
+        </Link>
         <DashboardCard label="My Class Rooms" value={assignments.length}>
           {isLoading ? (
             <p>Loading assigned classes...</p>
@@ -125,11 +131,15 @@ export default function ParentDashboardPage(): ReactElement {
           {chats.filter((chat) => chat.chat_type === "SUPERVISED_PRIVATE_CHAT")
             .length === 0 ? (
           <EmptyState
-              actionHref={assignments.length > 0 ? "/chats" : undefined}
-              actionLabel={assignments.length > 0 ? "Open chats" : undefined}
+              actionHref={
+                assignments.length > 0 ? "/private-chats/new" : undefined
+              }
+              actionLabel={
+                assignments.length > 0 ? "Start private chat" : undefined
+              }
               description={
                 assignments.length > 0
-                  ? "Private chats with teachers will appear here."
+                  ? "Start a private chat with a teacher from one of your rooms."
                   : "Your account is active. Waiting for school to add you to a class room."
               }
               title="No private chats yet"
