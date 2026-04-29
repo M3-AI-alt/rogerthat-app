@@ -85,7 +85,7 @@ function ChatListItem({
 
   return (
     <Link
-      className={`flex gap-3 border-b border-slate-200 px-4 py-3 transition hover:bg-slate-50 ${
+      className={`flex min-w-0 gap-3 border-b border-slate-200 px-3 py-3 transition hover:bg-slate-50 sm:px-4 ${
         unreadCount > 0 ? "bg-emerald-50/60" : "bg-white"
       }`}
       href={`/chats/${chat.id}`}
@@ -110,7 +110,7 @@ function ChatListItem({
             {lastMessage ? formatTime(lastMessage.created_at) : "--"}
           </span>
         </div>
-        <div className="mt-1 flex items-center gap-2">
+        <div className="mt-1 flex min-w-0 items-center gap-1.5 sm:gap-2">
           <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase text-slate-500">
             {getChatTypeLabel(chat)}
           </span>
@@ -214,9 +214,9 @@ export default function ChatsPage(): ReactElement {
   }, []);
 
   return (
-    <main className="min-h-screen bg-[#efeae2] text-slate-950">
-      <div className="mx-auto grid min-h-screen w-full max-w-7xl bg-white shadow-xl lg:grid-cols-[320px_minmax(0,1fr)_320px]">
-        <aside className="border-r border-slate-200 bg-white">
+    <main className="h-[100dvh] overflow-hidden bg-[#efeae2] text-slate-950">
+      <div className="mx-auto grid h-full w-full max-w-7xl overflow-hidden bg-white shadow-xl lg:grid-cols-[320px_minmax(0,1fr)_320px]">
+        <aside className="flex min-h-0 min-w-0 flex-col border-r border-slate-200 bg-white">
           <div className="sticky top-0 z-10 border-b border-slate-200 bg-[#f0f2f5] px-4 py-3">
             <div className="flex items-center justify-between gap-3">
               <div>
@@ -252,7 +252,7 @@ export default function ChatsPage(): ReactElement {
             </p>
           ) : null}
 
-          <div className="max-h-[calc(100vh-125px)] overflow-y-auto">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain scroll-smooth">
             {isLoading ? (
               <p className="p-4 text-sm text-slate-600">Loading chats...</p>
             ) : chats.length === 0 ? (

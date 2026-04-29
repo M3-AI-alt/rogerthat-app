@@ -104,8 +104,8 @@ export default function LoginPage(): ReactElement {
   }
 
   return (
-    <main className="min-h-screen bg-[#f5f8ff] px-5 py-5 text-slate-950">
-      <section className="mx-auto flex min-h-[calc(100vh-2.5rem)] w-full max-w-md flex-col">
+    <main className="min-h-[100dvh] overflow-x-hidden bg-[#f5f8ff] px-4 py-4 text-slate-950 sm:px-5 sm:py-5">
+      <section className="mx-auto flex min-h-[calc(100dvh-2rem)] w-full max-w-md flex-col sm:min-h-[calc(100vh-2.5rem)]">
         <div className="flex items-center justify-between">
           <Link
             aria-label="Go back home"
@@ -122,17 +122,17 @@ export default function LoginPage(): ReactElement {
           </Link>
         </div>
 
-        <div className="mt-10 flex flex-col items-center gap-2">
-          <div className="inline-flex min-h-14 items-center gap-3 rounded-lg bg-[#071b45] px-4 py-3 text-white shadow-xl shadow-blue-950/20">
+        <div className="mt-6 flex flex-col items-center gap-2 sm:mt-10">
+          <div className="inline-flex min-h-12 items-center gap-3 rounded-lg bg-[#071b45] px-4 py-2 text-white shadow-xl shadow-blue-950/20 sm:min-h-14 sm:py-3">
             <Image
               alt="Ben Oxford Hub logo"
-              className="h-12 w-12 object-contain"
+              className="h-10 w-10 object-contain sm:h-12 sm:w-12"
               height={48}
               priority
               src="/ben-oxford-logo.png"
               width={48}
             />
-            <span className="text-2xl font-semibold leading-none tracking-normal">
+            <span className="text-xl font-semibold leading-none tracking-normal sm:text-2xl">
               RogerThat
             </span>
           </div>
@@ -141,23 +141,23 @@ export default function LoginPage(): ReactElement {
           </p>
         </div>
 
-        <div className="mt-6 text-center">
+        <div className="mt-5 text-center sm:mt-6">
           <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">
             RogerThat
           </p>
-          <h1 className="mt-3 text-3xl font-bold tracking-normal text-slate-950">
+          <h1 className="mt-2 text-2xl font-bold tracking-normal text-slate-950 sm:mt-3 sm:text-3xl">
             Log into RogerThat
           </h1>
-          <p className="mt-3 text-sm leading-6 text-slate-600">
+          <p className="mt-2 text-sm leading-6 text-slate-600 sm:mt-3">
             Use your school email and password. Parent access starts with an
             access request.
           </p>
         </div>
 
-        <form className="mt-8 grid gap-3" onSubmit={handleEmailLogin}>
+        <form className="mt-5 grid gap-3 sm:mt-8" onSubmit={handleEmailLogin}>
           <input
             autoComplete="email"
-            className="min-h-14 rounded-lg border border-slate-300 bg-white px-4 text-base text-slate-950 shadow-sm transition focus:border-blue-600 focus:outline-none focus:ring-4 focus:ring-blue-500/20"
+            className="min-h-12 rounded-lg border border-slate-300 bg-white px-4 text-base text-slate-950 shadow-sm transition focus:border-blue-600 focus:outline-none focus:ring-4 focus:ring-blue-500/20 sm:min-h-14"
             onChange={(event) => setLoginId(event.target.value)}
             placeholder="Email address"
             required
@@ -166,7 +166,7 @@ export default function LoginPage(): ReactElement {
           />
           <input
             autoComplete="current-password"
-            className="min-h-14 rounded-lg border border-slate-300 bg-white px-4 text-base text-slate-950 shadow-sm transition focus:border-blue-600 focus:outline-none focus:ring-4 focus:ring-blue-500/20"
+            className="min-h-12 rounded-lg border border-slate-300 bg-white px-4 text-base text-slate-950 shadow-sm transition focus:border-blue-600 focus:outline-none focus:ring-4 focus:ring-blue-500/20 sm:min-h-14"
             minLength={6}
             onChange={(event) => setPassword(event.target.value)}
             placeholder="Password"
@@ -176,19 +176,19 @@ export default function LoginPage(): ReactElement {
           />
 
           {errorMessage ? (
-            <p className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm leading-6 text-red-700">
+            <p className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm leading-6 text-red-700 sm:p-4">
               {errorMessage}
             </p>
           ) : null}
 
           {statusMessage ? (
-            <p className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
+            <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm leading-6 text-amber-900 sm:p-4">
               {statusMessage}
             </p>
           ) : null}
 
           <button
-            className="mt-2 min-h-14 rounded-lg bg-blue-700 px-5 text-base font-bold text-white shadow-lg shadow-blue-900/20 transition duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-500/30 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-slate-400"
+            className="mt-1 min-h-12 rounded-lg bg-blue-700 px-5 text-base font-bold text-white shadow-lg shadow-blue-900/20 transition duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-500/30 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-slate-400 sm:mt-2 sm:min-h-14"
             disabled={isLoading}
             type="submit"
           >
@@ -209,7 +209,7 @@ export default function LoginPage(): ReactElement {
         </button>
 
         <button
-          className="mt-6 min-h-14 rounded-lg border border-slate-300 bg-white px-5 text-base font-bold text-slate-950 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-blue-200 hover:text-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-500/30 active:scale-[0.98]"
+          className="mt-5 min-h-12 rounded-lg border border-slate-300 bg-white px-5 text-base font-bold text-slate-950 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-blue-200 hover:text-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-500/30 active:scale-[0.98] sm:mt-6 sm:min-h-14"
           onClick={() => setShowCreateOptions((current) => !current)}
           type="button"
         >
@@ -217,11 +217,11 @@ export default function LoginPage(): ReactElement {
         </button>
 
         {showCreateOptions ? (
-          <div className="mt-4 grid gap-3 rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="mt-4 grid gap-3 rounded-lg border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
             {accountOptions.map((option) =>
               "href" in option ? (
                 <Link
-                  className="rounded-lg border border-blue-100 bg-blue-50 p-4 transition duration-200 hover:-translate-y-0.5 hover:bg-blue-100 focus:outline-none focus:ring-4 focus:ring-blue-500/30"
+                  className="rounded-lg border border-blue-100 bg-blue-50 p-3 transition duration-200 hover:-translate-y-0.5 hover:bg-blue-100 focus:outline-none focus:ring-4 focus:ring-blue-500/30 sm:p-4"
                   href={option.href}
                   key={option.title}
                 >
@@ -237,7 +237,7 @@ export default function LoginPage(): ReactElement {
                 </Link>
               ) : (
                 <div
-                  className="rounded-lg border border-slate-200 bg-slate-50 p-4"
+                  className="rounded-lg border border-slate-200 bg-slate-50 p-3 sm:p-4"
                   key={option.title}
                 >
                   <p className="text-sm font-bold text-slate-950">
