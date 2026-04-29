@@ -16,6 +16,7 @@ export const ROUTES = {
   chats: "/chats",
   contacts: "/contacts",
   privateChatsNew: "/private-chats/new",
+  resetPassword: "/reset-password",
   settings: "/settings",
   login: "/login",
   signup: "/signup",

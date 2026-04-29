@@ -47,6 +47,40 @@ export default function LoginPage(): ReactElement {
   const [isLoading, setIsLoading] = useState(false);
   const [showCreateOptions, setShowCreateOptions] = useState(false);
 
+  async function handlePasswordResetRequest() {
+    setErrorMessage("");
+    setStatusMessage("");
+
+    const configError = getSupabaseConfigError();
+
+    if (configError) {
+      setErrorMessage(configError);
+      return;
+    }
+
+    if (!loginId.includes("@")) {
+      setErrorMessage("Enter your school email address first, then request a reset link.");
+      return;
+    }
+
+    setIsLoading(true);
+
+    const { error } = await supabase.auth.resetPasswordForEmail(loginId.trim(), {
+      redirectTo: `${window.location.origin}${ROUTES.resetPassword}`,
+    });
+
+    setIsLoading(false);
+
+    if (error) {
+      setErrorMessage(getFriendlyAuthError(error));
+      return;
+    }
+
+    setStatusMessage(
+      "If this email exists in RogerThat, a password reset link has been sent. Open the link, set a new password, then log in again."
+    );
+  }
+
   async function handleEmailLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setErrorMessage("");
@@ -198,11 +232,8 @@ export default function LoginPage(): ReactElement {
 
         <button
           className="mt-4 text-center text-sm font-semibold text-blue-700 transition hover:text-blue-900 focus:outline-none focus:ring-4 focus:ring-blue-500/30"
-          onClick={() =>
-            setStatusMessage(
-              "Password reset will be added later. Ask school administration if you cannot log in."
-            )
-          }
+          disabled={isLoading}
+          onClick={() => void handlePasswordResetRequest()}
           type="button"
         >
           Forgot password?
