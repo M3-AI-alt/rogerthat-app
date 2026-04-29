@@ -112,6 +112,34 @@ function getChatTitle(chat: Chat | null): string {
   return chat?.chat_type === "CLASS_GROUP_CHAT" ? "Class Room" : "Private Chat";
 }
 
+function getChatDisplayTitle(
+  chat: Chat | null,
+  currentProfile?: UserProfile | null
+): string {
+  if (!chat || chat.chat_type === "CLASS_GROUP_CHAT") {
+    return getChatTitle(chat);
+  }
+
+  const members = chat.chat_members ?? [];
+  const peerMembers = members.filter((member) => {
+    if (!member.profile_id || member.profile_id === currentProfile?.id) {
+      return false;
+    }
+
+    return member.member_role !== "CEO" && member.member_role !== "DIRECTOR";
+  });
+  const visibleMembers = peerMembers.length > 0
+    ? peerMembers
+    : members.filter((member) => member.profile_id !== currentProfile?.id);
+  const memberNames = visibleMembers.map(getMemberName).filter(Boolean);
+
+  if (memberNames.length > 0) {
+    return memberNames.slice(0, 2).join(", ");
+  }
+
+  return getChatTitle(chat);
+}
+
 function getChatTypeLabel(chat: Chat | null): string {
   return chat?.chat_type === "CLASS_GROUP_CHAT" ? "Room" : "Private";
 }
@@ -308,11 +336,6 @@ function getFileIcon(attachment: MessageAttachment): string {
   return "FILE";
 }
 
-function getChatInitial(chat: Chat): string {
-  const title = getChatTitle(chat).trim();
-  return title.charAt(0).toUpperCase() || "#";
-}
-
 function chatMatchesSearch(
   chat: Chat,
   lastMessage: ChatMessage | undefined,
@@ -336,41 +359,47 @@ function chatMatchesSearch(
 
 function ChatListItem({
   chat,
+  currentProfile,
   hasLatestReport,
   isActive,
   lastMessage,
   unreadCount,
 }: {
   chat: Chat;
+  currentProfile: UserProfile | null;
   hasLatestReport: boolean;
   isActive: boolean;
   lastMessage?: ChatMessage;
   unreadCount: number;
 }): ReactElement {
   const cappedUnreadCount = unreadCount > 99 ? "99+" : String(unreadCount);
+  const title = getChatDisplayTitle(chat, currentProfile);
 
   return (
     <Link
-      className={`flex min-w-0 gap-3 border-b border-slate-200 px-3 py-3 transition hover:bg-slate-50 sm:px-4 ${
+      className={`group mx-2 flex min-w-0 gap-3 rounded-2xl px-3 py-3 transition hover:-translate-y-0.5 hover:shadow-sm ${
         isActive
-          ? "bg-emerald-50"
+          ? "bg-white shadow-sm ring-1 ring-emerald-200"
           : unreadCount > 0
-            ? "bg-emerald-50/60"
-            : "bg-white"
+            ? "bg-emerald-50/80 ring-1 ring-emerald-100"
+            : "bg-transparent hover:bg-white"
       }`}
       href={`/chats/${chat.id}`}
     >
       <div
-        className={`grid h-11 w-11 shrink-0 place-items-center rounded-full text-sm font-bold text-white ${
-          chat.chat_type === "CLASS_GROUP_CHAT" ? "bg-emerald-600" : "bg-blue-700"
+        className={`relative grid h-12 w-12 shrink-0 place-items-center rounded-2xl text-sm font-black text-white shadow-sm ${
+          chat.chat_type === "CLASS_GROUP_CHAT"
+            ? "bg-[linear-gradient(135deg,#059669,#14b8a6)]"
+            : "bg-[linear-gradient(135deg,#2563eb,#7c3aed)]"
         }`}
       >
-        {getChatInitial(chat)}
+        {getInitials(title)}
+        <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-white bg-emerald-400" />
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between gap-3">
-          <p className="truncate text-sm font-semibold text-slate-950">
-            {getChatTitle(chat)}
+          <p className="truncate text-sm font-bold text-slate-950">
+            {title}
           </p>
           <span
             className={`shrink-0 text-[11px] font-medium ${
@@ -380,17 +409,17 @@ function ChatListItem({
             {lastMessage ? formatTime(lastMessage.created_at) : "--"}
           </span>
         </div>
-        <div className="mt-1 flex min-w-0 items-center gap-1.5 sm:gap-2">
-          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase text-slate-500">
+        <div className="mt-1 flex min-w-0 items-center gap-2">
+          <span className="shrink-0 rounded-full bg-white/80 px-2 py-0.5 text-[10px] font-bold uppercase text-slate-500 ring-1 ring-slate-200">
             {getChatTypeLabel(chat)}
           </span>
           {hasLatestReport ? (
-            <span className="shrink-0 rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-semibold uppercase text-blue-700">
-              Latest report
+            <span className="shrink-0 rounded-full bg-blue-600 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
+              Report
             </span>
           ) : null}
           {unreadCount > 0 ? (
-            <span className="shrink-0 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold uppercase text-emerald-700">
+            <span className="shrink-0 rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
               New
             </span>
           ) : null}
@@ -407,16 +436,6 @@ function ChatListItem({
             </span>
           ) : null}
         </div>
-        {unreadCount > 0 ? (
-          <div className="mt-1 flex items-center gap-2 text-[10px] font-semibold uppercase text-emerald-700">
-            <span className="rounded-full bg-white px-2 py-0.5">
-              Sound cue
-            </span>
-            <span className="rounded-full bg-white px-2 py-0.5">
-              Visual cue
-            </span>
-          </div>
-        ) : null}
       </div>
     </Link>
   );
@@ -508,6 +527,7 @@ function ChatInfoPanel({
   currentProfile,
   onClose,
   onStartPrivateChat,
+  privateChatStartingMemberId,
   reportMessages,
   sharedFiles,
   sharedImages,
@@ -515,27 +535,19 @@ function ChatInfoPanel({
   chat: Chat | null;
   currentProfile: UserProfile | null;
   onClose?: () => void;
-  onStartPrivateChat: (member: ChatMember) => void;
+  onStartPrivateChat: (member: ChatMember) => Promise<void> | void;
+  privateChatStartingMemberId: string | null;
   reportMessages: ChatMessage[];
   sharedFiles: MessageAttachment[];
   sharedImages: MessageAttachment[];
 }): ReactElement {
-  const [activeMemberId, setActiveMemberId] = useState<string | null>(null);
-  const activeMember = (chat?.chat_members ?? []).find(
-    (member) => member.id === activeMemberId
-  );
-  const canMessageActiveMember =
-    !!activeMember?.profile_id &&
-    !!currentProfile &&
-    activeMember.profile_id !== currentProfile.id;
-
   return (
-    <div className="flex h-full flex-col bg-white">
+    <div className="flex h-full min-w-0 flex-col bg-white">
       <div className="border-b border-slate-200 bg-[#f0f2f5] px-4 py-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <p className="truncate text-base font-semibold text-slate-950">
-              {getChatTitle(chat)}
+              {getChatDisplayTitle(chat, currentProfile)}
             </p>
             <p className="mt-1 text-xs font-semibold uppercase text-slate-500">
               {getChatTypeLabel(chat)}
@@ -553,7 +565,7 @@ function ChatInfoPanel({
         </div>
       </div>
 
-      <div className="space-y-6 overflow-y-auto p-4">
+      <div className="min-h-0 space-y-6 overflow-y-auto overscroll-contain p-4">
         <section className="rounded-lg border border-emerald-200 bg-emerald-50 p-3">
           <h2 className="text-sm font-semibold text-emerald-950">
             Supervision
@@ -573,77 +585,67 @@ function ChatInfoPanel({
             {(chat?.chat_members ?? []).length === 0 ? (
               <p className="text-sm text-slate-500">No participants loaded.</p>
             ) : (
-              (chat?.chat_members ?? []).map((member) => (
-                <button
-                  className="group relative rounded-xl border border-slate-200 bg-white p-3 text-left transition hover:border-emerald-300 hover:bg-emerald-50/60"
-                  key={member.id}
-                  onClick={() =>
-                    setActiveMemberId((currentId) =>
-                      currentId === member.id ? null : member.id
-                    )
-                  }
-                  onContextMenu={(event) => {
-                    event.preventDefault();
-                    setActiveMemberId(member.id);
-                  }}
-                  type="button"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-emerald-600 text-sm font-bold text-white">
-                      {getInitials(getMemberName(member))}
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-semibold text-slate-900">
-                        {getMemberName(member)}
+              (chat?.chat_members ?? []).map((member) => {
+                const isCurrentUser = member.profile_id === currentProfile?.id;
+                const canOpenPrivateChat = !!member.profile_id && !isCurrentUser;
+                const isOpeningPrivateChat =
+                  privateChatStartingMemberId === member.id;
+
+                return (
+                  <button
+                    className={`group relative rounded-2xl border p-3 text-left shadow-sm transition hover:-translate-y-0.5 ${
+                      canOpenPrivateChat
+                        ? "border-slate-200 bg-white hover:border-emerald-300 hover:bg-emerald-50/70 hover:shadow-md"
+                        : "border-slate-200 bg-slate-50"
+                    }`}
+                    disabled={!canOpenPrivateChat || isOpeningPrivateChat}
+                    key={member.id}
+                    onClick={() => void onStartPrivateChat(member)}
+                    type="button"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-emerald-600 text-sm font-bold text-white">
+                        {getInitials(getMemberName(member))}
                       </span>
-                      <span className="mt-1 block text-xs uppercase text-slate-500">
-                        {getRoleLabel(member.member_role)}
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm font-semibold text-slate-900">
+                          {getMemberName(member)}
+                        </span>
+                        <span className="mt-1 block text-xs uppercase text-slate-500">
+                          {getRoleLabel(member.member_role)}
+                        </span>
                       </span>
-                    </span>
-                    <span className="text-lg text-slate-300 transition group-hover:text-emerald-600">
-                      ...
-                    </span>
-                  </div>
-                  <p className="mt-2 text-xs font-medium text-slate-500">
-                    {getMemberActionHint(currentProfile, member)}
-                  </p>
-                </button>
-              ))
+                      <span
+                        className={`shrink-0 rounded-full px-3 py-1 text-[11px] font-bold ${
+                          canOpenPrivateChat
+                            ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100"
+                            : "bg-white text-slate-500 ring-1 ring-slate-200"
+                        }`}
+                      >
+                        {isOpeningPrivateChat
+                          ? "Opening"
+                          : isCurrentUser
+                            ? "You"
+                            : "Chat"}
+                      </span>
+                    </div>
+                    <p className="mt-2 text-xs font-medium text-slate-500">
+                      {getMemberActionHint(currentProfile, member)}
+                    </p>
+                  </button>
+                );
+              })
             )}
           </div>
 
-          {activeMember ? (
-            <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3 shadow-sm">
-              <p className="text-sm font-semibold text-slate-950">
-                {getMemberName(activeMember)}
-              </p>
-              <div className="mt-3 grid gap-2">
-                <button
-                  className="min-h-10 rounded-lg bg-emerald-600 px-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-300"
-                  disabled={!canMessageActiveMember}
-                  onClick={() => onStartPrivateChat(activeMember)}
-                  type="button"
-                >
-                  Send message
-                </button>
-                {currentProfile?.role === "CEO" && chat?.class_id ? (
-                  <Link
-                    className="inline-flex min-h-10 items-center justify-center rounded-lg border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-800"
-                    href={`${ROUTES.ceoRoomMembers}?classId=${chat.class_id}`}
-                    onClick={onClose}
-                  >
-                    Manage room members
-                  </Link>
-                ) : null}
-                <button
-                  className="min-h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-600"
-                  onClick={() => setActiveMemberId(null)}
-                  type="button"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
+          {currentProfile?.role === "CEO" && chat?.class_id ? (
+            <Link
+              className="mt-3 inline-flex min-h-10 w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-800 shadow-sm hover:border-emerald-300 hover:text-emerald-700"
+              href={`${ROUTES.ceoRoomMembers}?classId=${chat.class_id}`}
+              onClick={onClose}
+            >
+              Manage room members
+            </Link>
           ) : null}
         </section>
 
@@ -754,6 +756,8 @@ export default function ChatDetailPage(): ReactElement {
   const [isSending, setIsSending] = useState(false);
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [isEmojiOpen, setIsEmojiOpen] = useState(false);
+  const [privateChatStartingMemberId, setPrivateChatStartingMemberId] =
+    useState<string | null>(null);
   const [notificationNotice, setNotificationNotice] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const imageInputRef = useRef<HTMLInputElement | null>(null);
@@ -807,6 +811,7 @@ export default function ChatDetailPage(): ReactElement {
     }
 
     setErrorMessage("");
+    setPrivateChatStartingMemberId(member.id);
 
     try {
       const privateChat = await createOrOpenDirectPrivateChat(member.profile_id);
@@ -816,6 +821,8 @@ export default function ChatDetailPage(): ReactElement {
       setErrorMessage(
         "Could not start this private chat. School communication rules may not allow this connection yet."
       );
+    } finally {
+      setPrivateChatStartingMemberId(null);
     }
   }
 
@@ -1050,30 +1057,38 @@ export default function ChatDetailPage(): ReactElement {
   }, [chatId, loadMessages, profile?.id]);
 
   return (
-    <main className="h-[100dvh] overflow-hidden bg-[#efeae2] text-slate-950">
-      <div className="mx-auto grid h-full w-full max-w-7xl overflow-hidden bg-white shadow-xl lg:grid-cols-[320px_minmax(0,1fr)_320px]">
-        <aside className="hidden min-h-0 min-w-0 flex-col border-r border-slate-200 bg-white lg:flex">
-          <div className="sticky top-0 z-10 border-b border-slate-200 bg-[#f0f2f5] px-4 py-3">
+    <main className="h-[100dvh] overflow-hidden bg-slate-950 text-slate-950">
+      <div className="grid h-full w-full overflow-hidden bg-white lg:grid-cols-[320px_minmax(0,1fr)] xl:grid-cols-[320px_minmax(0,1fr)_340px] 2xl:grid-cols-[360px_minmax(0,1fr)_360px]">
+        <aside className="hidden min-h-0 min-w-0 flex-col border-r border-slate-200 bg-[#f6f8fb] lg:flex">
+          <div className="sticky top-0 z-10 border-b border-slate-200 bg-white/90 px-4 py-3 shadow-sm backdrop-blur">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-xs font-semibold uppercase text-slate-500">
+                <p className="text-xs font-bold uppercase tracking-wide text-emerald-700">
                   RogerThat
                 </p>
-                <h1 className="text-lg font-semibold text-slate-950">
+                <h1 className="text-xl font-black text-slate-950">
                   Chats
                 </h1>
               </div>
-              <Link
-                className="rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700"
-                href="/"
-              >
-                Home
-              </Link>
+              <div className="flex shrink-0 gap-2">
+                <Link
+                  className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 shadow-sm hover:border-emerald-200 hover:text-emerald-700"
+                  href="/"
+                >
+                  Home
+                </Link>
+                <Link
+                  className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 shadow-sm hover:border-emerald-200 hover:text-emerald-700"
+                  href={ROUTES.contacts}
+                >
+                  Contacts
+                </Link>
+              </div>
             </div>
             <label className="mt-3 block">
               <span className="sr-only">Search chats</span>
               <input
-                className="h-10 w-full rounded-full border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-emerald-300 focus:ring-2 focus:ring-emerald-100"
+                className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-medium text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-emerald-300 focus:bg-white focus:ring-2 focus:ring-emerald-100"
                 onChange={(event) => setSearchQuery(event.target.value)}
                 placeholder="Search chats"
                 type="search"
@@ -1081,7 +1096,7 @@ export default function ChatDetailPage(): ReactElement {
               />
             </label>
           </div>
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain scroll-smooth">
+          <div className="min-h-0 flex-1 space-y-1 overflow-y-auto overscroll-contain py-2 scroll-smooth">
             {chats.length === 0 && !isLoading ? (
               <EmptyState
                 description="Rooms and private chats appear here after setup."
@@ -1096,6 +1111,7 @@ export default function ChatDetailPage(): ReactElement {
               filteredChats.map((item) => (
                 <ChatListItem
                   chat={item}
+                  currentProfile={profile}
                   hasLatestReport={
                     item.id === chatId
                       ? false
@@ -1118,21 +1134,21 @@ export default function ChatDetailPage(): ReactElement {
           </div>
         </aside>
 
-        <section className="flex h-[100dvh] min-w-0 flex-col overflow-hidden bg-[#f7f1e8]">
-          <header className="flex min-h-14 shrink-0 items-center justify-between gap-2 border-b border-slate-200 bg-white/95 px-3 shadow-sm sm:min-h-16 sm:gap-3 sm:px-4">
+        <section className="flex h-[100dvh] min-w-0 flex-col overflow-hidden bg-[#f4efe7]">
+          <header className="flex min-h-16 shrink-0 items-center justify-between gap-2 border-b border-slate-200 bg-white/95 px-3 shadow-sm backdrop-blur sm:gap-3 sm:px-4">
             <div className="flex min-w-0 items-center gap-3">
               <Link
-                className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white text-lg font-semibold text-slate-700 lg:hidden"
+                className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-slate-100 text-lg font-semibold text-slate-700 lg:hidden"
                 href="/chats"
               >
                 ←
               </Link>
-              <div className="hidden h-10 w-10 shrink-0 place-items-center rounded-full bg-emerald-600 text-sm font-black text-white sm:grid">
-                {chat ? getInitials(getChatTitle(chat)) : "R"}
+              <div className="hidden h-11 w-11 shrink-0 place-items-center rounded-2xl bg-[linear-gradient(135deg,#059669,#14b8a6)] text-sm font-black text-white shadow-sm sm:grid">
+                {chat ? getInitials(getChatDisplayTitle(chat, profile)) : "R"}
               </div>
               <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-slate-950 sm:text-base">
-                  {getChatTitle(chat)}
+                <p className="truncate text-base font-black text-slate-950">
+                  {getChatDisplayTitle(chat, profile)}
                 </p>
                 <p className="truncate text-xs text-slate-500">
                   {(chat?.chat_members ?? []).length} participants ·
@@ -1141,11 +1157,11 @@ export default function ChatDetailPage(): ReactElement {
               </div>
             </div>
             <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-              <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700 ring-1 ring-emerald-100 sm:px-3 sm:text-xs">
+              <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700 ring-1 ring-emerald-100 sm:px-3 sm:text-xs">
                 {getChatTypeLabel(chat)}
               </span>
               <button
-                className="min-h-9 rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm lg:hidden"
+                className="min-h-9 rounded-full bg-slate-950 px-3 py-1 text-xs font-bold text-white shadow-sm xl:hidden"
                 onClick={() => setIsInfoOpen(true)}
                 type="button"
               >
@@ -1199,7 +1215,7 @@ export default function ChatDetailPage(): ReactElement {
                       </div>
                     ) : null}
                     <article
-                      className={`flex items-end gap-2 ${
+                      className={`animate-message-enter flex items-end gap-2 ${
                         isOwnMessage ? "justify-end" : "justify-start"
                       }`}
                       id={`message-${message.id}`}
@@ -1210,7 +1226,7 @@ export default function ChatDetailPage(): ReactElement {
                         </div>
                       ) : null}
                       <div
-                        className={`relative max-w-[92%] overflow-hidden rounded-2xl px-3.5 py-2.5 text-sm shadow-sm ring-1 sm:max-w-[70%] ${
+                        className={`relative max-w-[92%] overflow-hidden rounded-[1.35rem] px-3.5 py-2.5 text-sm shadow-sm ring-1 sm:max-w-[70%] ${
                           isOwnMessage
                             ? "rounded-br-md bg-[#d9fdd3] ring-emerald-200"
                             : "rounded-bl-md bg-white ring-slate-200"
@@ -1379,11 +1395,12 @@ export default function ChatDetailPage(): ReactElement {
           )}
         </section>
 
-        <aside className="hidden border-l border-slate-200 bg-white lg:block">
+        <aside className="hidden min-w-0 border-l border-slate-200 bg-white xl:block">
           <ChatInfoPanel
             chat={chat}
             currentProfile={profile}
             onStartPrivateChat={(member) => void handleStartPrivateChat(member)}
+            privateChatStartingMemberId={privateChatStartingMemberId}
             reportMessages={reportMessages}
             sharedFiles={sharedFiles}
             sharedImages={sharedImages}
@@ -1392,7 +1409,7 @@ export default function ChatDetailPage(): ReactElement {
       </div>
 
       {isInfoOpen ? (
-        <div className="fixed inset-0 z-50 bg-black/40 lg:hidden">
+        <div className="fixed inset-0 z-50 bg-black/40 xl:hidden">
           <button
             aria-label="Close chat info"
             className="absolute inset-0 h-full w-full cursor-default"
@@ -1405,6 +1422,7 @@ export default function ChatDetailPage(): ReactElement {
               currentProfile={profile}
               onClose={() => setIsInfoOpen(false)}
               onStartPrivateChat={(member) => void handleStartPrivateChat(member)}
+              privateChatStartingMemberId={privateChatStartingMemberId}
               reportMessages={reportMessages}
               sharedFiles={sharedFiles}
               sharedImages={sharedImages}

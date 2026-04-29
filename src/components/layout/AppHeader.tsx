@@ -64,6 +64,12 @@ export function AppHeader(): ReactElement {
           >
             Home
           </Link>
+          <Link
+            className="hidden min-h-10 items-center rounded-lg px-3 text-sm font-semibold text-slate-700 transition duration-200 hover:bg-blue-50 hover:text-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-500/30 sm:inline-flex"
+            href="/contacts"
+          >
+            Contacts
+          </Link>
           {dashboardHref ? (
             <Link
               className="hidden min-h-10 items-center rounded-lg px-3 text-sm font-semibold text-slate-700 transition duration-200 hover:bg-blue-50 hover:text-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-500/30 sm:inline-flex"

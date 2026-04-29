@@ -14,6 +14,7 @@ export const ROUTES = {
   teachers: "/teachers",
   directors: "/directors",
   chats: "/chats",
+  contacts: "/contacts",
   privateChatsNew: "/private-chats/new",
   settings: "/settings",
   login: "/login",

@@ -13,6 +13,8 @@ import {
   readChatReadState,
   type ChatReadState,
 } from "@/lib/chat-read-state";
+import { getCurrentUserProfile, type UserProfile } from "@/lib/profile";
+import { ROUTES } from "@/lib/routes";
 import Link from "next/link";
 import { type ReactElement, useEffect, useMemo, useState } from "react";
 
@@ -22,6 +24,45 @@ function getChatTitle(chat: Chat): string {
   }
 
   return chat.title?.trim() || "Private Chat";
+}
+
+function getProfileName(profile?: {
+  full_name: string | null;
+  email: string | null;
+} | null): string {
+  return profile?.full_name?.trim() || profile?.email?.trim() || "Member";
+}
+
+function getMemberName(member: NonNullable<Chat["chat_members"]>[number]): string {
+  return getProfileName(member.profiles);
+}
+
+function getChatDisplayTitle(
+  chat: Chat,
+  currentProfile: UserProfile | null
+): string {
+  if (chat.chat_type === "CLASS_GROUP_CHAT") {
+    return getChatTitle(chat);
+  }
+
+  const members = chat.chat_members ?? [];
+  const peerMembers = members.filter((member) => {
+    if (!member.profile_id || member.profile_id === currentProfile?.id) {
+      return false;
+    }
+
+    return member.member_role !== "CEO" && member.member_role !== "DIRECTOR";
+  });
+  const visibleMembers = peerMembers.length > 0
+    ? peerMembers
+    : members.filter((member) => member.profile_id !== currentProfile?.id);
+  const memberNames = visibleMembers.map(getMemberName).filter(Boolean);
+
+  if (memberNames.length > 0) {
+    return memberNames.slice(0, 2).join(", ");
+  }
+
+  return getChatTitle(chat);
 }
 
 function getChatTypeLabel(chat: Chat): string {
@@ -42,11 +83,6 @@ function formatTime(value: string): string {
     hour: "numeric",
     minute: "2-digit",
   }).format(new Date(value));
-}
-
-function getChatInitial(chat: Chat): string {
-  const title = getChatTitle(chat).trim();
-  return title.charAt(0).toUpperCase() || "#";
 }
 
 function chatMatchesSearch(
@@ -72,35 +108,41 @@ function chatMatchesSearch(
 
 function ChatListItem({
   chat,
+  currentProfile,
   lastMessage,
   unreadCount,
   hasLatestReport,
 }: {
   chat: Chat;
+  currentProfile: UserProfile | null;
   lastMessage?: ChatMessage;
   unreadCount: number;
   hasLatestReport: boolean;
 }): ReactElement {
   const cappedUnreadCount = unreadCount > 99 ? "99+" : String(unreadCount);
+  const title = getChatDisplayTitle(chat, currentProfile);
 
   return (
     <Link
-      className={`flex min-w-0 gap-3 border-b border-slate-200 px-3 py-3 transition hover:bg-slate-50 sm:px-4 ${
-        unreadCount > 0 ? "bg-emerald-50/60" : "bg-white"
+      className={`group mx-2 flex min-w-0 gap-3 rounded-2xl px-3 py-3 transition hover:-translate-y-0.5 hover:bg-white hover:shadow-sm ${
+        unreadCount > 0 ? "bg-emerald-50/80 ring-1 ring-emerald-100" : "bg-transparent"
       }`}
       href={`/chats/${chat.id}`}
     >
       <div
-        className={`grid h-11 w-11 shrink-0 place-items-center rounded-full text-sm font-bold text-white ${
-          chat.chat_type === "CLASS_GROUP_CHAT" ? "bg-emerald-600" : "bg-blue-700"
+        className={`relative grid h-12 w-12 shrink-0 place-items-center rounded-2xl text-sm font-black text-white shadow-sm ${
+          chat.chat_type === "CLASS_GROUP_CHAT"
+            ? "bg-[linear-gradient(135deg,#059669,#14b8a6)]"
+            : "bg-[linear-gradient(135deg,#2563eb,#7c3aed)]"
         }`}
       >
-        {getChatInitial(chat)}
+        {title.charAt(0).toUpperCase() || "#"}
+        <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-white bg-emerald-400" />
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between gap-3">
-          <p className="truncate text-sm font-semibold text-slate-950">
-            {getChatTitle(chat)}
+          <p className="truncate text-sm font-bold text-slate-950">
+            {title}
           </p>
           <span
             className={`shrink-0 text-[11px] font-medium ${
@@ -110,17 +152,17 @@ function ChatListItem({
             {lastMessage ? formatTime(lastMessage.created_at) : "--"}
           </span>
         </div>
-        <div className="mt-1 flex min-w-0 items-center gap-1.5 sm:gap-2">
-          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase text-slate-500">
+        <div className="mt-1 flex min-w-0 items-center gap-2">
+          <span className="shrink-0 rounded-full bg-white/80 px-2 py-0.5 text-[10px] font-bold uppercase text-slate-500 ring-1 ring-slate-200">
             {getChatTypeLabel(chat)}
           </span>
           {hasLatestReport ? (
-            <span className="shrink-0 rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-semibold uppercase text-blue-700">
-              Latest report
+            <span className="shrink-0 rounded-full bg-blue-600 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
+              Report
             </span>
           ) : null}
           {unreadCount > 0 ? (
-            <span className="shrink-0 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold uppercase text-emerald-700">
+            <span className="shrink-0 rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
               New
             </span>
           ) : null}
@@ -137,16 +179,6 @@ function ChatListItem({
             </span>
           ) : null}
         </div>
-        {unreadCount > 0 ? (
-          <div className="mt-1 flex items-center gap-2 text-[10px] font-semibold uppercase text-emerald-700">
-            <span className="rounded-full bg-white px-2 py-0.5">
-              Sound cue
-            </span>
-            <span className="rounded-full bg-white px-2 py-0.5">
-              Visual cue
-            </span>
-          </div>
-        ) : null}
       </div>
     </Link>
   );
@@ -161,6 +193,7 @@ export default function ChatsPage(): ReactElement {
     Record<string, ChatMessage[]>
   >({});
   const [readState, setReadState] = useState<ChatReadState>({});
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -179,8 +212,12 @@ export default function ChatsPage(): ReactElement {
 
     try {
       setReadState(readChatReadState());
-      const chatData = await getMyChats();
+      const [chatData, profileData] = await Promise.all([
+        getMyChats(),
+        getCurrentUserProfile(),
+      ]);
       setChats(chatData);
+      setProfile(profileData);
 
       const messageEntries = await Promise.all(
         chatData.map(async (chat) => {
@@ -214,30 +251,38 @@ export default function ChatsPage(): ReactElement {
   }, []);
 
   return (
-    <main className="h-[100dvh] overflow-hidden bg-[#efeae2] text-slate-950">
-      <div className="mx-auto grid h-full w-full max-w-7xl overflow-hidden bg-white shadow-xl lg:grid-cols-[320px_minmax(0,1fr)_320px]">
-        <aside className="flex min-h-0 min-w-0 flex-col border-r border-slate-200 bg-white">
-          <div className="sticky top-0 z-10 border-b border-slate-200 bg-[#f0f2f5] px-4 py-3">
+    <main className="h-[100dvh] overflow-hidden bg-slate-950 text-slate-950">
+      <div className="grid h-full w-full overflow-hidden bg-white lg:grid-cols-[340px_minmax(0,1fr)] xl:grid-cols-[360px_minmax(0,1fr)_340px]">
+        <aside className="flex min-h-0 min-w-0 flex-col border-r border-slate-200 bg-[#f6f8fb]">
+          <div className="sticky top-0 z-10 border-b border-slate-200 bg-white/90 px-4 py-3 shadow-sm backdrop-blur">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-xs font-semibold uppercase text-slate-500">
+                <p className="text-xs font-bold uppercase tracking-wide text-emerald-700">
                   RogerThat
                 </p>
-                <h1 className="text-lg font-semibold text-slate-950">
+                <h1 className="text-xl font-black text-slate-950">
                   Chats
                 </h1>
               </div>
-              <Link
-                className="rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700"
-                href="/"
-              >
-                Home
-              </Link>
+              <div className="flex shrink-0 gap-2">
+                <Link
+                  className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 shadow-sm hover:border-emerald-200 hover:text-emerald-700"
+                  href="/"
+                >
+                  Home
+                </Link>
+                <Link
+                  className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 shadow-sm hover:border-emerald-200 hover:text-emerald-700"
+                  href={ROUTES.contacts}
+                >
+                  Contacts
+                </Link>
+              </div>
             </div>
             <label className="mt-3 block">
               <span className="sr-only">Search chats</span>
               <input
-                className="h-10 w-full rounded-full border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-emerald-300 focus:ring-2 focus:ring-emerald-100"
+                className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-medium text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-emerald-300 focus:bg-white focus:ring-2 focus:ring-emerald-100"
                 onChange={(event) => setSearchQuery(event.target.value)}
                 placeholder="Search chats"
                 type="search"
@@ -252,7 +297,7 @@ export default function ChatsPage(): ReactElement {
             </p>
           ) : null}
 
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain scroll-smooth">
+          <div className="min-h-0 flex-1 space-y-1 overflow-y-auto overscroll-contain py-2 scroll-smooth">
             {isLoading ? (
               <p className="p-4 text-sm text-slate-600">Loading chats...</p>
             ) : chats.length === 0 ? (
@@ -269,6 +314,7 @@ export default function ChatsPage(): ReactElement {
               filteredChats.map((chat) => (
                 <ChatListItem
                   chat={chat}
+                  currentProfile={profile}
                   hasLatestReport={hasUnreadReport(
                     messagesByChat[chat.id],
                     readState[chat.id]
@@ -285,9 +331,12 @@ export default function ChatsPage(): ReactElement {
           </div>
         </aside>
 
-        <section className="hidden min-h-screen place-items-center bg-[#efeae2] lg:grid">
-          <div className="max-w-sm text-center">
-            <h2 className="text-2xl font-semibold text-slate-950">
+        <section className="hidden min-h-screen place-items-center bg-[#f4efe7] bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.11),transparent_32%),linear-gradient(135deg,rgba(255,255,255,0.34)_25%,transparent_25%)] bg-[length:auto,28px_28px] lg:grid">
+          <div className="max-w-md rounded-[2rem] border border-white/70 bg-white/80 p-8 text-center shadow-[0_24px_70px_rgba(15,23,42,0.12)] backdrop-blur">
+            <div className="mx-auto grid h-16 w-16 place-items-center rounded-3xl bg-[linear-gradient(135deg,#059669,#14b8a6)] text-2xl font-black text-white shadow-lg">
+              R
+            </div>
+            <h2 className="mt-5 text-2xl font-black text-slate-950">
               Select a chat
             </h2>
             <p className="mt-3 text-sm leading-6 text-slate-600">
@@ -297,9 +346,9 @@ export default function ChatsPage(): ReactElement {
           </div>
         </section>
 
-        <aside className="hidden border-l border-slate-200 bg-white lg:block">
-          <div className="border-b border-slate-200 bg-[#f0f2f5] px-4 py-4">
-            <p className="text-base font-semibold text-slate-950">
+        <aside className="hidden border-l border-slate-200 bg-white xl:block">
+          <div className="border-b border-slate-200 bg-white/95 px-4 py-4 shadow-sm">
+            <p className="text-base font-black text-slate-950">
               Conversation info
             </p>
           </div>
