@@ -208,7 +208,8 @@ export default function CeoChatsPage(): ReactElement {
           Rooms & Private Chats
         </h1>
         <p className="mt-3 text-base leading-7 text-slate-600">
-          Create class rooms and private chats for school communication.
+          Create class rooms and private chats for school-controlled
+          communication.
         </p>
         <div className="mt-5 flex flex-wrap gap-3">
           <Link
@@ -248,7 +249,8 @@ export default function CeoChatsPage(): ReactElement {
             </p>
             <p className="mt-1 text-sm leading-6 text-slate-600">
               Opens one room for the selected class. Add any extra teachers,
-              parents, or directors who should join the room.
+              parents, or directors who should join the room. Parent replies
+              are disabled by default.
             </p>
           </div>
           <label className="grid gap-2 text-sm font-medium text-slate-700">
@@ -350,7 +352,8 @@ export default function CeoChatsPage(): ReactElement {
               Create private chat
             </p>
             <p className="mt-1 text-sm leading-6 text-slate-600">
-              Choose the teacher and parent. The CEO is included by default.
+              Choose an allowed teacher-parent pair. The CEO is included by
+              default for school safety.
             </p>
           </div>
           <label className="grid gap-2 text-sm font-medium text-slate-700">

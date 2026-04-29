@@ -209,8 +209,8 @@ export default function NewPrivateChatPage(): ReactElement {
           Start Private Chat
         </h1>
         <p className="mt-3 max-w-3xl text-base leading-7 text-slate-600">
-          Start a WhatsApp-style private chat between selected room members.
-          CEO is included automatically for school safety.
+          Start a school-controlled private chat with an allowed teacher-parent
+          pair. CEO is included automatically for school safety.
         </p>
       </section>
 
@@ -236,7 +236,7 @@ export default function NewPrivateChatPage(): ReactElement {
             <EmptyState
               actionHref={ROUTES.chats}
               actionLabel="Open chats"
-              description="Private chats need a class room with at least one teacher and one parent."
+              description="Private chats need an allowed teacher-parent pair in one of your class rooms."
               title="No private chat options yet"
             />
           ) : (

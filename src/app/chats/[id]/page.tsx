@@ -84,6 +84,64 @@ function getChatTypeLabel(chat: Chat | null): string {
   return chat?.chat_type === "CLASS_GROUP_CHAT" ? "Room" : "Private";
 }
 
+function userIsChatMember(chat: Chat | null, profile: UserProfile | null): boolean {
+  if (!chat || !profile) {
+    return false;
+  }
+
+  return (chat.chat_members ?? []).some(
+    (member) => member.profile_id === profile.id
+  );
+}
+
+function canUserSendMessage(chat: Chat | null, profile: UserProfile | null): boolean {
+  if (!chat || !profile || !profile.role || !userIsChatMember(chat, profile)) {
+    return false;
+  }
+
+  if (profile.role === "CEO" || profile.role === "DIRECTOR") {
+    return profile.approval_status === "APPROVED";
+  }
+
+  if (chat.chat_type === "CLASS_GROUP_CHAT") {
+    if (profile.role === "TEACHER") {
+      return profile.approval_status === "APPROVED";
+    }
+
+    return profile.role === "PARENT" && chat.parent_can_reply;
+  }
+
+  if (chat.chat_type === "SUPERVISED_PRIVATE_CHAT") {
+    return (
+      (profile.role === "TEACHER" &&
+        profile.approval_status === "APPROVED" &&
+        chat.teacher_id === profile.id) ||
+      (profile.role === "PARENT" && chat.parent_id === profile.id)
+    );
+  }
+
+  return false;
+}
+
+function getSendRestrictionMessage(
+  chat: Chat | null,
+  profile: UserProfile | null
+): string {
+  if (!chat || !profile) {
+    return "Loading school-controlled communication settings...";
+  }
+
+  if (!userIsChatMember(chat, profile)) {
+    return "You can read this only after the school adds you to the chat.";
+  }
+
+  if (chat.chat_type === "CLASS_GROUP_CHAT" && profile.role === "PARENT") {
+    return "Parent replies are disabled for this room. You can read messages and contact the teacher, CEO, or Director in a private chat.";
+  }
+
+  return "Messaging is limited by school-controlled communication rules.";
+}
+
 function getRoleLabel(role: string | null | undefined): string {
   if (!role) {
     return "Member";
@@ -375,9 +433,9 @@ function ChatInfoPanel({
             Supervision
           </h2>
           <p className="mt-1 text-sm leading-6 text-emerald-900">
-            School communication is supervised for safety and quality. CEO and
-            selected Directors can monitor rooms and private chats according to
-            school rules.
+            School-controlled communication is supervised for safety and
+            quality. CEO and selected Directors can monitor rooms and private
+            chats according to school rules.
           </p>
         </section>
 
@@ -539,6 +597,7 @@ export default function ChatDetailPage(): ReactElement {
     () => messages.filter(isReportMessage),
     [messages]
   );
+  const canSendMessage = canUserSendMessage(chat, profile);
 
   function clearSelectedFile() {
     setSelectedFile(null);
@@ -865,7 +924,8 @@ export default function ChatDetailPage(): ReactElement {
                   {getChatTitle(chat)}
                 </p>
                 <p className="truncate text-xs text-slate-500">
-                  {(chat?.chat_members ?? []).length} participants
+                  {(chat?.chat_members ?? []).length} participants ·
+                  School-controlled communication
                 </p>
               </div>
             </div>
@@ -974,10 +1034,11 @@ export default function ChatDetailPage(): ReactElement {
             )}
           </div>
 
-          <form
-            className="shrink-0 border-t border-slate-200 bg-[#f0f2f5] p-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] sm:p-3"
-            onSubmit={handleSendMessage}
-          >
+          {canSendMessage ? (
+            <form
+              className="shrink-0 border-t border-slate-200 bg-[#f0f2f5] p-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] sm:p-3"
+              onSubmit={handleSendMessage}
+            >
             {selectedFile ? (
               <div className="mb-2 flex items-center justify-between gap-2 rounded-lg border border-emerald-200 bg-white px-3 py-2 text-sm text-slate-700">
                 <span className="truncate font-medium">
@@ -1072,7 +1133,14 @@ export default function ChatDetailPage(): ReactElement {
                 </button>
               </div>
             </div>
-          </form>
+            </form>
+          ) : (
+            <div className="shrink-0 border-t border-slate-200 bg-[#f0f2f5] p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
+              <p className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium leading-6 text-slate-600">
+                {getSendRestrictionMessage(chat, profile)}
+              </p>
+            </div>
+          )}
         </section>
 
         <aside className="hidden border-l border-slate-200 bg-white lg:block">

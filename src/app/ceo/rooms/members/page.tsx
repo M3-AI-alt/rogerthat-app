@@ -194,8 +194,10 @@ export default function CeoRoomMembersPage(): ReactElement {
           Manage Members
         </h1>
         <p className="mt-3 max-w-3xl text-base leading-7 text-slate-600">
-          Add CEO, Directors, Teachers, and Parents to class rooms. Room members
-          can send messages, report messages, and attachments in the same chat.
+          Add CEO, Directors, Teachers, and Parents to class rooms. RogerThat
+          uses school-controlled communication: parents can read room messages
+          by default, and parent replies stay off unless the room is configured
+          to allow them.
         </p>
         <div className="mt-5 flex flex-wrap gap-3">
           <Link

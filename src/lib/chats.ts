@@ -27,6 +27,7 @@ export type Chat = {
   title: string | null;
   created_by: string | null;
   parent_id: string | null;
+  parent_can_reply: boolean;
   teacher_id: string | null;
   created_at: string;
   class_groups?: {
@@ -63,7 +64,7 @@ type MessageRow = Omit<ChatMessage, "profiles"> & {
 };
 
 const chatSelect =
-  "id, class_id, chat_type, title, created_by, parent_id, teacher_id, created_at, class_groups(id, name, code), chat_members(id, chat_id, profile_id, member_role, created_at, profiles(id, full_name, email, role))";
+  "id, class_id, chat_type, title, created_by, parent_id, parent_can_reply, teacher_id, created_at, class_groups(id, name, code), chat_members(id, chat_id, profile_id, member_role, created_at, profiles(id, full_name, email, role))";
 
 const messageSelect =
   "id, chat_id, sender_id, content, message_type, created_at, profiles(id, full_name, email, role)";
