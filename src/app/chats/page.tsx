@@ -8,7 +8,7 @@ import {
   type ChatMessage,
 } from "@/lib/chats";
 import Link from "next/link";
-import { type ReactElement, useEffect, useState } from "react";
+import { type ReactElement, useEffect, useMemo, useState } from "react";
 
 function getChatTitle(chat: Chat): string {
   if (chat.chat_type === "CLASS_GROUP_CHAT" && chat.class_groups) {
@@ -27,7 +27,8 @@ function getMessagePreview(message?: ChatMessage): string {
     return "No messages yet";
   }
 
-  return message.content.replace(/^\[REPORT\]\n/, "");
+  const content = message.content.replace(/^\[REPORT\]\n/, "");
+  return message.message_type === "REPORT" ? `Report: ${content}` : content;
 }
 
 function formatTime(value: string): string {
@@ -37,6 +38,76 @@ function formatTime(value: string): string {
   }).format(new Date(value));
 }
 
+function getChatInitial(chat: Chat): string {
+  const title = getChatTitle(chat).trim();
+  return title.charAt(0).toUpperCase() || "#";
+}
+
+function chatMatchesSearch(
+  chat: Chat,
+  lastMessage: ChatMessage | undefined,
+  searchQuery: string
+): boolean {
+  const query = searchQuery.trim().toLowerCase();
+
+  if (!query) {
+    return true;
+  }
+
+  return [
+    getChatTitle(chat),
+    getChatTypeLabel(chat),
+    getMessagePreview(lastMessage),
+  ]
+    .join(" ")
+    .toLowerCase()
+    .includes(query);
+}
+
+function ChatListItem({
+  chat,
+  lastMessage,
+}: {
+  chat: Chat;
+  lastMessage?: ChatMessage;
+}): ReactElement {
+  return (
+    <Link
+      className="flex gap-3 border-b border-slate-200 bg-white px-4 py-3 transition hover:bg-slate-50"
+      href={`/chats/${chat.id}`}
+    >
+      <div
+        className={`grid h-11 w-11 shrink-0 place-items-center rounded-full text-sm font-bold text-white ${
+          chat.chat_type === "CLASS_GROUP_CHAT" ? "bg-emerald-600" : "bg-blue-700"
+        }`}
+      >
+        {getChatInitial(chat)}
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-start justify-between gap-3">
+          <p className="truncate text-sm font-semibold text-slate-950">
+            {getChatTitle(chat)}
+          </p>
+          <span className="shrink-0 text-[11px] font-medium text-slate-500">
+            {lastMessage ? formatTime(lastMessage.created_at) : "--"}
+          </span>
+        </div>
+        <div className="mt-1 flex items-center gap-2">
+          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase text-slate-500">
+            {getChatTypeLabel(chat)}
+          </span>
+          <p className="truncate text-xs text-slate-500">
+            {getMessagePreview(lastMessage)}
+          </p>
+          <span className="ml-auto grid h-5 min-w-5 shrink-0 place-items-center rounded-full bg-emerald-100 px-1.5 text-[10px] font-bold text-emerald-700">
+            0
+          </span>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
 export default function ChatsPage(): ReactElement {
   const [chats, setChats] = useState<Chat[]>([]);
   const [lastMessagesByChat, setLastMessagesByChat] = useState<
@@ -44,6 +115,15 @@ export default function ChatsPage(): ReactElement {
   >({});
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredChats = useMemo(
+    () =>
+      chats.filter((chat) =>
+        chatMatchesSearch(chat, lastMessagesByChat[chat.id], searchQuery)
+      ),
+    [chats, lastMessagesByChat, searchQuery]
+  );
 
   async function loadChats() {
     setErrorMessage("");
@@ -96,6 +176,16 @@ export default function ChatsPage(): ReactElement {
                 Home
               </Link>
             </div>
+            <label className="mt-3 block">
+              <span className="sr-only">Search chats</span>
+              <input
+                className="h-10 w-full rounded-full border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-emerald-300 focus:ring-2 focus:ring-emerald-100"
+                onChange={(event) => setSearchQuery(event.target.value)}
+                placeholder="Search chats"
+                type="search"
+                value={searchQuery}
+              />
+            </label>
           </div>
 
           {errorMessage ? (
@@ -104,7 +194,7 @@ export default function ChatsPage(): ReactElement {
             </p>
           ) : null}
 
-          <div className="max-h-[calc(100vh-69px)] overflow-y-auto">
+          <div className="max-h-[calc(100vh-125px)] overflow-y-auto">
             {isLoading ? (
               <p className="p-4 text-sm text-slate-600">Loading chats...</p>
             ) : chats.length === 0 ? (
@@ -112,37 +202,19 @@ export default function ChatsPage(): ReactElement {
                 description="Rooms and private chats appear here after setup."
                 title="No chats"
               />
+            ) : filteredChats.length === 0 ? (
+              <EmptyState
+                description="Try another room, private chat, or message keyword."
+                title="No chats found"
+              />
             ) : (
-              chats.map((chat) => {
-                const lastMessage = lastMessagesByChat[chat.id];
-
-                return (
-                  <Link
-                    className="grid gap-1 border-b border-slate-200 bg-white px-4 py-3 transition hover:bg-slate-50"
-                    href={`/chats/${chat.id}`}
-                    key={chat.id}
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <p className="truncate text-sm font-semibold text-slate-950">
-                        {getChatTitle(chat)}
-                      </p>
-                      {lastMessage ? (
-                        <span className="shrink-0 text-[11px] font-medium text-slate-500">
-                          {formatTime(lastMessage.created_at)}
-                        </span>
-                      ) : null}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase text-slate-500">
-                        {getChatTypeLabel(chat)}
-                      </span>
-                      <p className="truncate text-xs text-slate-500">
-                        {getMessagePreview(lastMessage)}
-                      </p>
-                    </div>
-                  </Link>
-                );
-              })
+              filteredChats.map((chat) => (
+                <ChatListItem
+                  chat={chat}
+                  key={chat.id}
+                  lastMessage={lastMessagesByChat[chat.id]}
+                />
+              ))
             )}
           </div>
         </aside>

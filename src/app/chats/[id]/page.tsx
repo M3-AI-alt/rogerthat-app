@@ -94,6 +94,15 @@ function getMessageText(message: ChatMessage): string {
     : message.content;
 }
 
+function getMessagePreview(message?: ChatMessage): string {
+  if (!message) {
+    return "No messages yet";
+  }
+
+  const text = getMessageText(message);
+  return isReportMessage(message) ? `Report: ${text}` : text;
+}
+
 function formatTime(value: string): string {
   return new Intl.DateTimeFormat("en", {
     hour: "numeric",
@@ -123,6 +132,32 @@ function isImageAttachment(attachment: MessageAttachment): boolean {
   );
 }
 
+function getChatInitial(chat: Chat): string {
+  const title = getChatTitle(chat).trim();
+  return title.charAt(0).toUpperCase() || "#";
+}
+
+function chatMatchesSearch(
+  chat: Chat,
+  lastMessage: ChatMessage | undefined,
+  searchQuery: string
+): boolean {
+  const query = searchQuery.trim().toLowerCase();
+
+  if (!query) {
+    return true;
+  }
+
+  return [
+    getChatTitle(chat),
+    getChatTypeLabel(chat),
+    getMessagePreview(lastMessage),
+  ]
+    .join(" ")
+    .toLowerCase()
+    .includes(query);
+}
+
 function ChatListItem({
   chat,
   isActive,
@@ -134,28 +169,38 @@ function ChatListItem({
 }): ReactElement {
   return (
     <Link
-      className={`grid gap-1 border-b border-slate-200 px-4 py-3 transition hover:bg-slate-50 ${
+      className={`flex gap-3 border-b border-slate-200 px-4 py-3 transition hover:bg-slate-50 ${
         isActive ? "bg-emerald-50" : "bg-white"
       }`}
       href={`/chats/${chat.id}`}
     >
-      <div className="flex items-start justify-between gap-3">
-        <p className="truncate text-sm font-semibold text-slate-950">
-          {getChatTitle(chat)}
-        </p>
-        {lastMessage ? (
-          <span className="shrink-0 text-[11px] font-medium text-slate-500">
-            {formatTime(lastMessage.created_at)}
-          </span>
-        ) : null}
+      <div
+        className={`grid h-11 w-11 shrink-0 place-items-center rounded-full text-sm font-bold text-white ${
+          chat.chat_type === "CLASS_GROUP_CHAT" ? "bg-emerald-600" : "bg-blue-700"
+        }`}
+      >
+        {getChatInitial(chat)}
       </div>
-      <div className="flex items-center gap-2">
-        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase text-slate-500">
-          {getChatTypeLabel(chat)}
-        </span>
-        <p className="truncate text-xs text-slate-500">
-          {lastMessage ? getMessageText(lastMessage) : "No messages yet"}
-        </p>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-start justify-between gap-3">
+          <p className="truncate text-sm font-semibold text-slate-950">
+            {getChatTitle(chat)}
+          </p>
+          <span className="shrink-0 text-[11px] font-medium text-slate-500">
+            {lastMessage ? formatTime(lastMessage.created_at) : "--"}
+          </span>
+        </div>
+        <div className="mt-1 flex items-center gap-2">
+          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase text-slate-500">
+            {getChatTypeLabel(chat)}
+          </span>
+          <p className="truncate text-xs text-slate-500">
+            {getMessagePreview(lastMessage)}
+          </p>
+          <span className="ml-auto grid h-5 min-w-5 shrink-0 place-items-center rounded-full bg-emerald-100 px-1.5 text-[10px] font-bold text-emerald-700">
+            0
+          </span>
+        </div>
       </div>
     </Link>
   );
@@ -258,6 +303,7 @@ export default function ChatDetailPage(): ReactElement {
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const imageInputRef = useRef<HTMLInputElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -272,6 +318,13 @@ export default function ChatDetailPage(): ReactElement {
   const sharedFiles = useMemo(
     () => allAttachments.filter((attachment) => !isImageAttachment(attachment)),
     [allAttachments]
+  );
+  const filteredChats = useMemo(
+    () =>
+      chats.filter((item) =>
+        chatMatchesSearch(item, lastMessagesByChat[item.id], searchQuery)
+      ),
+    [chats, lastMessagesByChat, searchQuery]
   );
 
   function clearSelectedFile() {
@@ -474,15 +527,30 @@ export default function ChatDetailPage(): ReactElement {
                 Home
               </Link>
             </div>
+            <label className="mt-3 block">
+              <span className="sr-only">Search chats</span>
+              <input
+                className="h-10 w-full rounded-full border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-emerald-300 focus:ring-2 focus:ring-emerald-100"
+                onChange={(event) => setSearchQuery(event.target.value)}
+                placeholder="Search chats"
+                type="search"
+                value={searchQuery}
+              />
+            </label>
           </div>
-          <div className="max-h-[calc(100vh-69px)] overflow-y-auto">
+          <div className="max-h-[calc(100vh-125px)] overflow-y-auto">
             {chats.length === 0 && !isLoading ? (
               <EmptyState
                 description="Rooms and private chats appear here after setup."
                 title="No chats"
               />
+            ) : filteredChats.length === 0 && !isLoading ? (
+              <EmptyState
+                description="Try another room, private chat, or message keyword."
+                title="No chats found"
+              />
             ) : (
-              chats.map((item) => (
+              filteredChats.map((item) => (
                 <ChatListItem
                   chat={item}
                   isActive={item.id === chatId}
