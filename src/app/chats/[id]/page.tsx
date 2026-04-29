@@ -12,6 +12,14 @@ import {
   type MessageType,
 } from "@/lib/chats";
 import {
+  getLatestReadTimestamp,
+  getUnreadCount,
+  hasUnreadReport,
+  readChatReadState,
+  writeChatReadState,
+  type ChatReadState,
+} from "@/lib/chat-read-state";
+import {
   getMessageAttachments,
   isSupportedMessageAttachment,
   messageAttachmentAccept,
@@ -160,17 +168,27 @@ function chatMatchesSearch(
 
 function ChatListItem({
   chat,
+  hasLatestReport,
   isActive,
   lastMessage,
+  unreadCount,
 }: {
   chat: Chat;
+  hasLatestReport: boolean;
   isActive: boolean;
   lastMessage?: ChatMessage;
+  unreadCount: number;
 }): ReactElement {
+  const cappedUnreadCount = unreadCount > 99 ? "99+" : String(unreadCount);
+
   return (
     <Link
       className={`flex gap-3 border-b border-slate-200 px-4 py-3 transition hover:bg-slate-50 ${
-        isActive ? "bg-emerald-50" : "bg-white"
+        isActive
+          ? "bg-emerald-50"
+          : unreadCount > 0
+            ? "bg-emerald-50/60"
+            : "bg-white"
       }`}
       href={`/chats/${chat.id}`}
     >
@@ -186,7 +204,11 @@ function ChatListItem({
           <p className="truncate text-sm font-semibold text-slate-950">
             {getChatTitle(chat)}
           </p>
-          <span className="shrink-0 text-[11px] font-medium text-slate-500">
+          <span
+            className={`shrink-0 text-[11px] font-medium ${
+              unreadCount > 0 ? "text-emerald-700" : "text-slate-500"
+            }`}
+          >
             {lastMessage ? formatTime(lastMessage.created_at) : "--"}
           </span>
         </div>
@@ -194,13 +216,39 @@ function ChatListItem({
           <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase text-slate-500">
             {getChatTypeLabel(chat)}
           </span>
-          <p className="truncate text-xs text-slate-500">
+          {hasLatestReport ? (
+            <span className="shrink-0 rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-semibold uppercase text-blue-700">
+              Latest report
+            </span>
+          ) : null}
+          {unreadCount > 0 ? (
+            <span className="shrink-0 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold uppercase text-emerald-700">
+              New
+            </span>
+          ) : null}
+          <p
+            className={`truncate text-xs ${
+              unreadCount > 0 ? "font-semibold text-slate-800" : "text-slate-500"
+            }`}
+          >
             {getMessagePreview(lastMessage)}
           </p>
-          <span className="ml-auto grid h-5 min-w-5 shrink-0 place-items-center rounded-full bg-emerald-100 px-1.5 text-[10px] font-bold text-emerald-700">
-            0
-          </span>
+          {unreadCount > 0 ? (
+            <span className="ml-auto grid h-5 min-w-5 shrink-0 place-items-center rounded-full bg-emerald-600 px-1.5 text-[10px] font-bold text-white">
+              {cappedUnreadCount}
+            </span>
+          ) : null}
         </div>
+        {unreadCount > 0 ? (
+          <div className="mt-1 flex items-center gap-2 text-[10px] font-semibold uppercase text-emerald-700">
+            <span className="rounded-full bg-white px-2 py-0.5">
+              Sound cue
+            </span>
+            <span className="rounded-full bg-white px-2 py-0.5">
+              Visual cue
+            </span>
+          </div>
+        ) : null}
       </div>
     </Link>
   );
@@ -447,6 +495,10 @@ export default function ChatDetailPage(): ReactElement {
   const [lastMessagesByChat, setLastMessagesByChat] = useState<
     Record<string, ChatMessage | undefined>
   >({});
+  const [messagesByChat, setMessagesByChat] = useState<
+    Record<string, ChatMessage[]>
+  >({});
+  const [readState, setReadState] = useState<ChatReadState>({});
   const [attachmentsByMessage, setAttachmentsByMessage] = useState<
     Record<string, MessageAttachment[]>
   >({});
@@ -457,6 +509,7 @@ export default function ChatDetailPage(): ReactElement {
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const [isInfoOpen, setIsInfoOpen] = useState(false);
+  const [notificationNotice, setNotificationNotice] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const imageInputRef = useRef<HTMLInputElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -497,9 +550,31 @@ export default function ChatDetailPage(): ReactElement {
     }
   }
 
+  const markChatAsRead = useCallback(
+    (targetChatId: string, chatMessages: ChatMessage[]) => {
+      const nextReadState = {
+        ...readChatReadState(),
+        [targetChatId]: getLatestReadTimestamp(chatMessages),
+      };
+
+      writeChatReadState(nextReadState);
+      setReadState(nextReadState);
+    },
+    []
+  );
+
   const loadMessages = useCallback(async () => {
     const messageResult = await getChatMessages(chatId);
     setMessages(messageResult);
+    setMessagesByChat((currentMessages) => ({
+      ...currentMessages,
+      [chatId]: messageResult,
+    }));
+    setLastMessagesByChat((currentMessages) => ({
+      ...currentMessages,
+      [chatId]: messageResult.at(-1),
+    }));
+    markChatAsRead(chatId, messageResult);
 
     try {
       const attachmentGroups = await getMessageAttachments(
@@ -509,13 +584,14 @@ export default function ChatDetailPage(): ReactElement {
     } catch {
       setAttachmentsByMessage({});
     }
-  }, [chatId]);
+  }, [chatId, markChatAsRead]);
 
   const loadChat = useCallback(async () => {
     setErrorMessage("");
     setIsLoading(true);
 
     try {
+      setReadState(readChatReadState());
       const [chatList, chatResult, profileResult] = await Promise.all([
         getMyChats(),
         getChatById(chatId),
@@ -525,13 +601,22 @@ export default function ChatDetailPage(): ReactElement {
       setChat(chatResult);
       setProfile(profileResult);
 
-      const latestEntries = await Promise.all(
+      const messageEntries = await Promise.all(
         chatList.map(async (item) => {
           const itemMessages = await getChatMessages(item.id);
-          return [item.id, itemMessages.at(-1)] as const;
+          return [item.id, itemMessages] as const;
         })
       );
-      setLastMessagesByChat(Object.fromEntries(latestEntries));
+      const nextMessagesByChat = Object.fromEntries(messageEntries);
+      setMessagesByChat(nextMessagesByChat);
+      setLastMessagesByChat(
+        Object.fromEntries(
+          messageEntries.map(([itemId, itemMessages]) => [
+            itemId,
+            itemMessages.at(-1),
+          ])
+        )
+      );
 
       await loadMessages();
 
@@ -574,6 +659,25 @@ export default function ChatDetailPage(): ReactElement {
         currentMessages.some((currentMessage) => currentMessage.id === message.id)
           ? currentMessages
           : [...currentMessages, message]
+      );
+      setMessagesByChat((currentMessages) => {
+        const currentChatMessages = currentMessages[chatId] ?? [];
+        const nextChatMessages = currentChatMessages.some(
+          (currentMessage) => currentMessage.id === message.id
+        )
+          ? currentChatMessages
+          : [...currentChatMessages, message];
+
+        return {
+          ...currentMessages,
+          [chatId]: nextChatMessages,
+        };
+      });
+      markChatAsRead(
+        chatId,
+        messages.some((currentMessage) => currentMessage.id === message.id)
+          ? messages
+          : [...messages, message]
       );
       setLastMessagesByChat((currentMessages) => ({
         ...currentMessages,
@@ -638,7 +742,19 @@ export default function ChatDetailPage(): ReactElement {
           schema: "public",
           table: "messages",
         },
-        () => {
+        (payload) => {
+          const senderId =
+            typeof payload.new.sender_id === "string"
+              ? payload.new.sender_id
+              : "";
+
+          if (senderId && senderId !== profile?.id) {
+            setNotificationNotice(
+              "New message received. Sound cue placeholder."
+            );
+            window.setTimeout(() => setNotificationNotice(""), 3000);
+          }
+
           void loadMessages().catch(() => {
             setErrorMessage("A new message arrived, but it could not be loaded.");
           });
@@ -662,7 +778,7 @@ export default function ChatDetailPage(): ReactElement {
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [chatId, loadMessages]);
+  }, [chatId, loadMessages, profile?.id]);
 
   return (
     <main className="min-h-screen bg-[#efeae2] text-slate-950">
@@ -711,9 +827,22 @@ export default function ChatDetailPage(): ReactElement {
               filteredChats.map((item) => (
                 <ChatListItem
                   chat={item}
+                  hasLatestReport={
+                    item.id === chatId
+                      ? false
+                      : hasUnreadReport(
+                          messagesByChat[item.id],
+                          readState[item.id]
+                        )
+                  }
                   isActive={item.id === chatId}
                   key={item.id}
                   lastMessage={lastMessagesByChat[item.id]}
+                  unreadCount={
+                    item.id === chatId
+                      ? 0
+                      : getUnreadCount(messagesByChat[item.id], readState[item.id])
+                  }
                 />
               ))
             )}
@@ -755,6 +884,15 @@ export default function ChatDetailPage(): ReactElement {
           {errorMessage ? (
             <p className="m-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm leading-6 text-red-700">
               {errorMessage}
+            </p>
+          ) : null}
+
+          {notificationNotice ? (
+            <p
+              aria-live="polite"
+              className="mx-3 mt-3 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm font-semibold text-emerald-800"
+            >
+              {notificationNotice}
             </p>
           ) : null}
 

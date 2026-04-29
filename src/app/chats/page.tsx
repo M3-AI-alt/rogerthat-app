@@ -7,6 +7,12 @@ import {
   type Chat,
   type ChatMessage,
 } from "@/lib/chats";
+import {
+  getUnreadCount,
+  hasUnreadReport,
+  readChatReadState,
+  type ChatReadState,
+} from "@/lib/chat-read-state";
 import Link from "next/link";
 import { type ReactElement, useEffect, useMemo, useState } from "react";
 
@@ -67,13 +73,21 @@ function chatMatchesSearch(
 function ChatListItem({
   chat,
   lastMessage,
+  unreadCount,
+  hasLatestReport,
 }: {
   chat: Chat;
   lastMessage?: ChatMessage;
+  unreadCount: number;
+  hasLatestReport: boolean;
 }): ReactElement {
+  const cappedUnreadCount = unreadCount > 99 ? "99+" : String(unreadCount);
+
   return (
     <Link
-      className="flex gap-3 border-b border-slate-200 bg-white px-4 py-3 transition hover:bg-slate-50"
+      className={`flex gap-3 border-b border-slate-200 px-4 py-3 transition hover:bg-slate-50 ${
+        unreadCount > 0 ? "bg-emerald-50/60" : "bg-white"
+      }`}
       href={`/chats/${chat.id}`}
     >
       <div
@@ -88,7 +102,11 @@ function ChatListItem({
           <p className="truncate text-sm font-semibold text-slate-950">
             {getChatTitle(chat)}
           </p>
-          <span className="shrink-0 text-[11px] font-medium text-slate-500">
+          <span
+            className={`shrink-0 text-[11px] font-medium ${
+              unreadCount > 0 ? "text-emerald-700" : "text-slate-500"
+            }`}
+          >
             {lastMessage ? formatTime(lastMessage.created_at) : "--"}
           </span>
         </div>
@@ -96,13 +114,39 @@ function ChatListItem({
           <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase text-slate-500">
             {getChatTypeLabel(chat)}
           </span>
-          <p className="truncate text-xs text-slate-500">
+          {hasLatestReport ? (
+            <span className="shrink-0 rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-semibold uppercase text-blue-700">
+              Latest report
+            </span>
+          ) : null}
+          {unreadCount > 0 ? (
+            <span className="shrink-0 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold uppercase text-emerald-700">
+              New
+            </span>
+          ) : null}
+          <p
+            className={`truncate text-xs ${
+              unreadCount > 0 ? "font-semibold text-slate-800" : "text-slate-500"
+            }`}
+          >
             {getMessagePreview(lastMessage)}
           </p>
-          <span className="ml-auto grid h-5 min-w-5 shrink-0 place-items-center rounded-full bg-emerald-100 px-1.5 text-[10px] font-bold text-emerald-700">
-            0
-          </span>
+          {unreadCount > 0 ? (
+            <span className="ml-auto grid h-5 min-w-5 shrink-0 place-items-center rounded-full bg-emerald-600 px-1.5 text-[10px] font-bold text-white">
+              {cappedUnreadCount}
+            </span>
+          ) : null}
         </div>
+        {unreadCount > 0 ? (
+          <div className="mt-1 flex items-center gap-2 text-[10px] font-semibold uppercase text-emerald-700">
+            <span className="rounded-full bg-white px-2 py-0.5">
+              Sound cue
+            </span>
+            <span className="rounded-full bg-white px-2 py-0.5">
+              Visual cue
+            </span>
+          </div>
+        ) : null}
       </div>
     </Link>
   );
@@ -113,6 +157,10 @@ export default function ChatsPage(): ReactElement {
   const [lastMessagesByChat, setLastMessagesByChat] = useState<
     Record<string, ChatMessage | undefined>
   >({});
+  const [messagesByChat, setMessagesByChat] = useState<
+    Record<string, ChatMessage[]>
+  >({});
+  const [readState, setReadState] = useState<ChatReadState>({});
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -130,16 +178,26 @@ export default function ChatsPage(): ReactElement {
     setIsLoading(true);
 
     try {
+      setReadState(readChatReadState());
       const chatData = await getMyChats();
       setChats(chatData);
 
-      const latestEntries = await Promise.all(
+      const messageEntries = await Promise.all(
         chatData.map(async (chat) => {
           const messages = await getChatMessages(chat.id);
-          return [chat.id, messages.at(-1)] as const;
+          return [chat.id, messages] as const;
         })
       );
-      setLastMessagesByChat(Object.fromEntries(latestEntries));
+      const nextMessagesByChat = Object.fromEntries(messageEntries);
+      setMessagesByChat(nextMessagesByChat);
+      setLastMessagesByChat(
+        Object.fromEntries(
+          messageEntries.map(([chatId, chatMessages]) => [
+            chatId,
+            chatMessages.at(-1),
+          ])
+        )
+      );
     } catch {
       setErrorMessage("Could not load your chats. Please try again.");
     } finally {
@@ -211,8 +269,16 @@ export default function ChatsPage(): ReactElement {
               filteredChats.map((chat) => (
                 <ChatListItem
                   chat={chat}
+                  hasLatestReport={hasUnreadReport(
+                    messagesByChat[chat.id],
+                    readState[chat.id]
+                  )}
                   key={chat.id}
                   lastMessage={lastMessagesByChat[chat.id]}
+                  unreadCount={getUnreadCount(
+                    messagesByChat[chat.id],
+                    readState[chat.id]
+                  )}
                 />
               ))
             )}
