@@ -284,6 +284,159 @@ function FileCard({ attachment }: { attachment: MessageAttachment }): ReactEleme
   );
 }
 
+function ChatInfoPanel({
+  chat,
+  onClose,
+  reportMessages,
+  sharedFiles,
+  sharedImages,
+}: {
+  chat: Chat | null;
+  onClose?: () => void;
+  reportMessages: ChatMessage[];
+  sharedFiles: MessageAttachment[];
+  sharedImages: MessageAttachment[];
+}): ReactElement {
+  return (
+    <div className="flex h-full flex-col bg-white">
+      <div className="border-b border-slate-200 bg-[#f0f2f5] px-4 py-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="truncate text-base font-semibold text-slate-950">
+              {getChatTitle(chat)}
+            </p>
+            <p className="mt-1 text-xs font-semibold uppercase text-slate-500">
+              {getChatTypeLabel(chat)}
+            </p>
+          </div>
+          {onClose ? (
+            <button
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white text-lg font-semibold text-slate-700"
+              onClick={onClose}
+              type="button"
+            >
+              x
+            </button>
+          ) : null}
+        </div>
+      </div>
+
+      <div className="space-y-6 overflow-y-auto p-4">
+        <section className="rounded-lg border border-emerald-200 bg-emerald-50 p-3">
+          <h2 className="text-sm font-semibold text-emerald-950">
+            Supervision
+          </h2>
+          <p className="mt-1 text-sm leading-6 text-emerald-900">
+            School communication is supervised for safety and quality. CEO and
+            selected Directors can monitor rooms and private chats according to
+            school rules.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="text-sm font-semibold text-slate-950">
+            Participants
+          </h2>
+          <div className="mt-3 grid gap-2">
+            {(chat?.chat_members ?? []).length === 0 ? (
+              <p className="text-sm text-slate-500">No participants loaded.</p>
+            ) : (
+              (chat?.chat_members ?? []).map((member) => (
+                <div
+                  className="rounded-lg border border-slate-200 p-3"
+                  key={member.id}
+                >
+                  <p className="text-sm font-semibold text-slate-900">
+                    {getMemberName(member)}
+                  </p>
+                  <p className="mt-1 text-xs uppercase text-slate-500">
+                    {getRoleLabel(member.member_role)}
+                  </p>
+                </div>
+              ))
+            )}
+          </div>
+        </section>
+
+        <section>
+          <h2 className="text-sm font-semibold text-slate-950">
+            Report messages
+          </h2>
+          <div className="mt-3 grid gap-2">
+            {reportMessages.length === 0 ? (
+              <p className="text-sm text-slate-500">No reports yet.</p>
+            ) : (
+              reportMessages.map((message) => (
+                <a
+                  className="rounded-lg border border-blue-100 bg-blue-50 p-3"
+                  href={`#message-${message.id}`}
+                  key={message.id}
+                  onClick={onClose}
+                >
+                  <p className="text-xs font-semibold uppercase text-blue-700">
+                    Report · {formatTime(message.created_at)}
+                  </p>
+                  <p className="mt-1 text-sm font-semibold text-slate-900">
+                    {getReportSenderLabel(message)}
+                  </p>
+                  <p className="mt-1 line-clamp-2 text-sm leading-5 text-slate-600">
+                    {getMessageText(message)}
+                  </p>
+                </a>
+              ))
+            )}
+          </div>
+        </section>
+
+        <section>
+          <h2 className="text-sm font-semibold text-slate-950">
+            Shared images
+          </h2>
+          <div className="mt-3 grid grid-cols-3 gap-2">
+            {sharedImages.length === 0 ? (
+              <p className="col-span-3 text-sm text-slate-500">
+                No images yet.
+              </p>
+            ) : (
+              sharedImages.map((attachment) => (
+                <a
+                  className="aspect-square overflow-hidden rounded-lg border border-slate-200 bg-slate-100"
+                  href={attachment.download_url ?? attachment.file_url}
+                  key={attachment.id}
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element -- Signed Supabase URLs are short-lived and not configured for next/image. */}
+                  <img
+                    alt={attachment.file_name}
+                    className="h-full w-full object-cover"
+                    src={attachment.download_url ?? attachment.file_url}
+                  />
+                </a>
+              ))
+            )}
+          </div>
+        </section>
+
+        <section>
+          <h2 className="text-sm font-semibold text-slate-950">
+            Shared files
+          </h2>
+          <div className="mt-3 grid gap-2">
+            {sharedFiles.length === 0 ? (
+              <p className="text-sm text-slate-500">No files yet.</p>
+            ) : (
+              sharedFiles.map((attachment) => (
+                <FileCard attachment={attachment} key={attachment.id} />
+              ))
+            )}
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+}
+
 export default function ChatDetailPage(): ReactElement {
   const params = useParams<{ id: string }>();
   const chatId = params.id;
@@ -303,6 +456,7 @@ export default function ChatDetailPage(): ReactElement {
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
+  const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const imageInputRef = useRef<HTMLInputElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -325,6 +479,10 @@ export default function ChatDetailPage(): ReactElement {
         chatMatchesSearch(item, lastMessagesByChat[item.id], searchQuery)
       ),
     [chats, lastMessagesByChat, searchQuery]
+  );
+  const reportMessages = useMemo(
+    () => messages.filter(isReportMessage),
+    [messages]
   );
 
   function clearSelectedFile() {
@@ -572,17 +730,26 @@ export default function ChatDetailPage(): ReactElement {
                 ←
               </Link>
               <div className="min-w-0">
-              <p className="truncate text-base font-semibold text-slate-950">
-                {getChatTitle(chat)}
-              </p>
-              <p className="truncate text-xs text-slate-500">
-                {(chat?.chat_members ?? []).length} participants
-              </p>
+                <p className="truncate text-base font-semibold text-slate-950">
+                  {getChatTitle(chat)}
+                </p>
+                <p className="truncate text-xs text-slate-500">
+                  {(chat?.chat_members ?? []).length} participants
+                </p>
               </div>
             </div>
-            <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-600">
-              {getChatTypeLabel(chat)}
-            </span>
+            <div className="flex shrink-0 items-center gap-2">
+              <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-600">
+                {getChatTypeLabel(chat)}
+              </span>
+              <button
+                className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm lg:hidden"
+                onClick={() => setIsInfoOpen(true)}
+                type="button"
+              >
+                Info
+              </button>
+            </div>
           </header>
 
           {errorMessage ? (
@@ -608,6 +775,7 @@ export default function ChatDetailPage(): ReactElement {
                 return (
                   <article
                     className={`flex ${isOwnMessage ? "justify-end" : "justify-start"}`}
+                    id={`message-${message.id}`}
                     key={message.id}
                   >
                     <div
@@ -764,83 +932,34 @@ export default function ChatDetailPage(): ReactElement {
         </section>
 
         <aside className="hidden border-l border-slate-200 bg-white lg:block">
-          <div className="border-b border-slate-200 bg-[#f0f2f5] px-4 py-4">
-            <p className="text-base font-semibold text-slate-950">
-              Conversation info
-            </p>
-            <p className="mt-1 text-xs text-slate-500">
-              School communication is supervised.
-            </p>
-          </div>
-          <div className="max-h-[calc(100vh-73px)] space-y-6 overflow-y-auto p-4">
-            <section>
-              <h2 className="text-sm font-semibold text-slate-950">
-                Participants
-              </h2>
-              <div className="mt-3 grid gap-2">
-                {(chat?.chat_members ?? []).map((member) => (
-                  <div
-                    className="rounded-lg border border-slate-200 p-3"
-                    key={member.id}
-                  >
-                    <p className="text-sm font-semibold text-slate-900">
-                      {getMemberName(member)}
-                    </p>
-                    <p className="mt-1 text-xs uppercase text-slate-500">
-                      {getRoleLabel(member.member_role)}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            <section>
-              <h2 className="text-sm font-semibold text-slate-950">
-                Shared images
-              </h2>
-              <div className="mt-3 grid grid-cols-3 gap-2">
-                {sharedImages.length === 0 ? (
-                  <p className="col-span-3 text-sm text-slate-500">
-                    No images yet.
-                  </p>
-                ) : (
-                  sharedImages.map((attachment) => (
-                    <a
-                      className="aspect-square overflow-hidden rounded-lg border border-slate-200 bg-slate-100"
-                      href={attachment.download_url ?? attachment.file_url}
-                      key={attachment.id}
-                      rel="noreferrer"
-                      target="_blank"
-                    >
-                      {/* eslint-disable-next-line @next/next/no-img-element -- Signed Supabase URLs are short-lived and not configured for next/image. */}
-                      <img
-                        alt={attachment.file_name}
-                        className="h-full w-full object-cover"
-                        src={attachment.download_url ?? attachment.file_url}
-                      />
-                    </a>
-                  ))
-                )}
-              </div>
-            </section>
-
-            <section>
-              <h2 className="text-sm font-semibold text-slate-950">
-                Shared files
-              </h2>
-              <div className="mt-3 grid gap-2">
-                {sharedFiles.length === 0 ? (
-                  <p className="text-sm text-slate-500">No files yet.</p>
-                ) : (
-                  sharedFiles.map((attachment) => (
-                    <FileCard attachment={attachment} key={attachment.id} />
-                  ))
-                )}
-              </div>
-            </section>
-          </div>
+          <ChatInfoPanel
+            chat={chat}
+            reportMessages={reportMessages}
+            sharedFiles={sharedFiles}
+            sharedImages={sharedImages}
+          />
         </aside>
       </div>
+
+      {isInfoOpen ? (
+        <div className="fixed inset-0 z-50 bg-black/40 lg:hidden">
+          <button
+            aria-label="Close chat info"
+            className="absolute inset-0 h-full w-full cursor-default"
+            onClick={() => setIsInfoOpen(false)}
+            type="button"
+          />
+          <aside className="absolute right-0 top-0 h-full w-[min(24rem,92vw)] shadow-2xl">
+            <ChatInfoPanel
+              chat={chat}
+              onClose={() => setIsInfoOpen(false)}
+              reportMessages={reportMessages}
+              sharedFiles={sharedFiles}
+              sharedImages={sharedImages}
+            />
+          </aside>
+        </div>
+      ) : null}
     </main>
   );
 }
