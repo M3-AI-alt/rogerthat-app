@@ -452,7 +452,7 @@ export default function CeoChatsPage(): ReactElement {
               <p className="text-sm text-slate-600">Loading chats...</p>
             ) : chats.length === 0 ? (
               <EmptyState
-                description="Create a class room or private chat to start messaging."
+                description="Create a room or private chat to start messaging."
                 title="No rooms or chats yet"
               />
             ) : (

@@ -249,7 +249,7 @@ export default function CeoRoomMembersPage(): ReactElement {
             <EmptyState
               actionHref={ROUTES.ceoClasses}
               actionLabel="Create room"
-              description="Create a class room before adding members."
+              description="Create a room before adding members."
               title="No rooms yet"
             />
           ) : !room ? (

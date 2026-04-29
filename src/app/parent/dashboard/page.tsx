@@ -30,7 +30,7 @@ export default function ParentDashboardPage(): ReactElement {
       setAssignments(assignmentData);
       setChats(chatData);
     } catch {
-      setErrorMessage("Could not load your assigned classes. Please try again.");
+      setErrorMessage("Could not load your assigned rooms. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -74,7 +74,7 @@ export default function ParentDashboardPage(): ReactElement {
         </Link>
         <DashboardCard label="My Class Rooms" value={assignments.length}>
           {isLoading ? (
-            <p>Loading assigned classes...</p>
+            <p>Loading assigned rooms...</p>
           ) : errorMessage ? (
             <p className="text-red-700">{errorMessage}</p>
           ) : assignments.length === 0 ? (

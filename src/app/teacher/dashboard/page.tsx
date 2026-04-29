@@ -117,7 +117,7 @@ export default function TeacherDashboardPage(): ReactElement {
           Classes assigned by the school.
         </DashboardCard>
         <DashboardCard label="Room Messages">
-          Send messages, reports, and files inside rooms.
+          Send chat messages, report messages, and files inside rooms.
         </DashboardCard>
         <DashboardCard
           label="Private Chats"
@@ -181,7 +181,7 @@ export default function TeacherDashboardPage(): ReactElement {
                       {getClassLabel(classItem)}
                     </p>
                     <p className="mt-2 text-sm text-slate-600">
-                      Open the room to send messages and reports.
+                      Open the room to send chat messages, report messages, and files.
                     </p>
                     <div className="mt-4 flex flex-wrap gap-2">
                       {classChat ? (

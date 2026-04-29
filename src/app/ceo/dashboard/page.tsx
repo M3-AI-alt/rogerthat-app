@@ -168,6 +168,12 @@ export default function CeoDashboardPage(): ReactElement {
           >
             Private Chats
           </Link>
+          <Link
+            className="inline-flex min-h-12 items-center justify-center rounded-lg border border-blue-200 bg-blue-50 px-5 text-base font-semibold text-blue-800"
+            href={ROUTES.demoChecklist}
+          >
+            Demo Checklist
+          </Link>
         </div>
       </section>
 
@@ -182,7 +188,7 @@ export default function CeoDashboardPage(): ReactElement {
               description="Create the class room."
               href={ROUTES.ceoClasses}
               isDone={classes.length > 0}
-              title="Create a class room"
+              title="Create room"
             />
             <SetupChecklistItem
               description="Connect a teacher to the class."
@@ -203,7 +209,7 @@ export default function CeoDashboardPage(): ReactElement {
               title="Manage room members"
             />
             <SetupChecklistItem
-              description="Teacher opens the room and sends a message or report."
+              description="Teacher opens the room and sends a message, report, or file."
               href={
                 chats.find((chat) => chat.chat_type === "CLASS_GROUP_CHAT")
                   ? `/chats/${
@@ -221,9 +227,9 @@ export default function CeoDashboardPage(): ReactElement {
         {!isLoadingClasses && classes.length === 0 ? (
           <EmptyState
             actionHref={ROUTES.ceoClasses}
-            actionLabel="Create your first class"
-            description="Class rooms unlock parent assignments, teacher messages, and report updates."
-            title="Create your first class room"
+            actionLabel="Create your first room"
+            description="Rooms unlock parent assignments, teacher messages, report messages, and file sharing."
+            title="Create your first room"
           />
         ) : null}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
@@ -235,12 +241,12 @@ export default function CeoDashboardPage(): ReactElement {
         </div>
         <DashboardCard label="Open class rooms">
           {isLoadingClasses ? (
-            <p>Loading classes...</p>
+            <p>Loading rooms...</p>
           ) : classes.length === 0 ? (
             <EmptyState
               actionHref={ROUTES.ceoClasses}
-              actionLabel="Manage classes"
-              description="Create a class room such as BOH-A1 to start the demo flow."
+              actionLabel="Manage rooms"
+              description="Create a room such as BOH-A1 to start the demo flow."
               title="No class rooms yet"
             />
           ) : (

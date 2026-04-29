@@ -22,12 +22,12 @@ const roleDetails = [
   {
     label: "Teacher",
     description:
-      "Sends messages and report updates inside assigned class rooms.",
+      "Sends messages, report messages, and files inside assigned rooms.",
   },
   {
     label: "Parent",
     description:
-      "Uses the mobile-first experience to read room messages and report updates for assigned class rooms only.",
+      "Uses the mobile-first experience to read messages, reports, and files for assigned rooms only.",
   },
   {
     label: "Class Room",

@@ -412,7 +412,9 @@ function ChatInfoPanel({
           </h2>
           <div className="mt-3 grid gap-2">
             {reportMessages.length === 0 ? (
-              <p className="text-sm text-slate-500">No reports yet.</p>
+              <p className="text-sm text-slate-500">
+                Report messages will appear here.
+              </p>
             ) : (
               reportMessages.map((message) => (
                 <a
@@ -901,7 +903,7 @@ export default function ChatDetailPage(): ReactElement {
               <p className="text-sm text-slate-600">Loading messages...</p>
             ) : messages.length === 0 ? (
               <EmptyState
-                description="Send the first message or report."
+                description="Send the first chat message, report message, or file."
                 title="No messages yet"
               />
             ) : (

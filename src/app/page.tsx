@@ -46,7 +46,7 @@ const entryOptions = [
   },
   {
     title: "Teacher login",
-    description: "Access your rooms and send messages or report updates.",
+    description: "Access your rooms and send messages, reports, and files.",
     href: ROUTES.login,
     action: "Log in",
   },
@@ -58,7 +58,7 @@ const entryOptions = [
   },
   {
     title: "Admin / CEO",
-    description: "Manage classes, users, and all communication.",
+    description: "Manage rooms, users, and all communication.",
     href: ROUTES.login,
     action: "Log in",
   },

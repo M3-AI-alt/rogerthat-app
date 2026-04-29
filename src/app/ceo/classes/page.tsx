@@ -47,10 +47,10 @@ export default function CeoClassesPage(): ReactElement {
       setClasses((currentClasses) => [newClass, ...currentClasses]);
       setName("");
       setCode("");
-      setSuccessMessage("Class created.");
+      setSuccessMessage("Room created.");
     } catch {
       setErrorMessage(
-        "Could not create class. Check that the code is unique and try again."
+        "Could not create room. Check that the code is unique and try again."
       );
     } finally {
       setIsCreating(false);
@@ -73,10 +73,10 @@ export default function CeoClassesPage(): ReactElement {
           CEO / Owner
         </p>
         <h1 className="mt-3 text-3xl font-semibold text-slate-950">
-          Manage classes
+          Manage rooms
         </h1>
         <p className="mt-3 text-base leading-7 text-slate-600">
-          Create class groups with unique codes such as BOH-A1.
+          Create class rooms with unique codes such as BOH-A1.
         </p>
         <div className="mt-5 flex flex-wrap gap-3">
           <Link
@@ -100,10 +100,10 @@ export default function CeoClassesPage(): ReactElement {
           onSubmit={handleCreateClass}
         >
           <p className="text-base font-semibold text-slate-950">
-            Create new class
+            Create new room
           </p>
           <label className="grid gap-2 text-sm font-medium text-slate-700">
-            Class name
+            Room name
             <input
               className="min-h-12 rounded-lg border border-slate-300 px-4 text-base text-slate-950"
               onChange={(event) => setName(event.target.value)}
@@ -114,7 +114,7 @@ export default function CeoClassesPage(): ReactElement {
             />
           </label>
           <label className="grid gap-2 text-sm font-medium text-slate-700">
-            Unique class code
+            Unique room code
             <input
               className="min-h-12 rounded-lg border border-slate-300 px-4 text-base uppercase text-slate-950"
               onChange={(event) => setCode(event.target.value)}
@@ -141,22 +141,22 @@ export default function CeoClassesPage(): ReactElement {
             disabled={isCreating}
             type="submit"
           >
-            {isCreating ? "Creating..." : "Create class"}
+            {isCreating ? "Creating..." : "Create room"}
           </button>
         </form>
 
         <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="text-sm font-medium text-slate-500">All classes</p>
+          <p className="text-sm font-medium text-slate-500">All rooms</p>
           <h2 className="mt-1 text-xl font-semibold text-slate-950">
-            Class groups
+            Class Rooms
           </h2>
           <div className="mt-5 grid gap-3">
             {isLoading ? (
-              <p className="text-sm text-slate-600">Loading classes...</p>
+              <p className="text-sm text-slate-600">Loading rooms...</p>
             ) : classes.length === 0 ? (
               <EmptyState
-                description="Create a class like BOH-A1 to start parent assignment and room messaging."
-                title="No classes yet"
+                description="Create a room like BOH-A1 to start parent assignment and room messaging."
+                title="No rooms yet"
               />
             ) : (
               classes.map((classGroup) => (
@@ -187,7 +187,7 @@ export default function CeoClassesPage(): ReactElement {
                       className="inline-flex min-h-10 items-center rounded-lg border border-blue-200 bg-blue-50 px-4 text-sm font-semibold text-blue-800"
                       href={ROUTES.ceoChats}
                     >
-                      Open chat
+                      Open Room
                     </Link>
                     <Link
                       className="inline-flex min-h-10 items-center rounded-lg border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700"

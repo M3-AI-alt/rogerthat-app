@@ -291,8 +291,8 @@ export default function ChatsPage(): ReactElement {
               Select a chat
             </h2>
             <p className="mt-3 text-sm leading-6 text-slate-600">
-              Open a class room or private chat to send messages, reports, and
-              attachments.
+              Open a room or private chat to send messages, report messages,
+              and files.
             </p>
           </div>
         </section>
